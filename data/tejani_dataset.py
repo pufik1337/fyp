@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 
 import numpy as np
 
-from util import read_image
+from .util import read_image
 
 
 class TejaniBboxDataset:
@@ -71,16 +71,17 @@ class TejaniBboxDataset:
         #             'for 2012 dataset. For 2007 dataset, you can pick \'test\''
         #             ' in addition to the above mentioned splits.'
         #         )
-        #id_list_file = os.path.join(
-            #data_dir, 'ImageSets/Main/{0}.txt'.format(split))
+        id_list_file = os.path.join(
+            data_dir, 'train.txt')
 
-        #self.ids = [id_.strip() for id_ in open(id_list_file)]
+        self.ids = [id_.strip() for id_ in open(id_list_file)]
         self.data_dir = data_dir
         self.use_difficult = use_difficult
         self.return_difficult = return_difficult
         self.label_names = TEJANI_BBOX_LABEL_NAMES
 
     def __len__(self):
+        print(len(self.ids))
         return len(self.ids)
 
     def get_example(self, i):
