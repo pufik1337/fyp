@@ -116,7 +116,7 @@ class TejaniBboxDataset:
             bbox.append([
                 int(bndbox_anno.find(tag).text) - 1
                 for tag in ('ymin', 'xmin', 'ymax', 'xmax')])
-            name = int(obj.find('name').text.lower().strip())
+            name = int(obj.find('name').text.lower().strip()) - 1
             label.append(name)
         print (bbox, label)        
         bbox = np.stack(bbox).astype(np.float32)
