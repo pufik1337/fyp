@@ -62,7 +62,7 @@ def train(**kwargs):
                                        shuffle=False, \
                                        pin_memory=True
                                        )
-    faster_rcnn = FasterRCNNVGG16()
+    faster_rcnn = FasterRCNNVGG16(n_fg_class=6)
     print('model construct completed')
     trainer = FasterRCNNTrainer(faster_rcnn).cuda()
     if opt.load_path:

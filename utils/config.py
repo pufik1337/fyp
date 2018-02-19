@@ -7,7 +7,8 @@ from pprint import pprint
 
 class Config:
     # data
-    voc_data_dir = '/home/cy/.chainer/dataset/pfnet/chainercv/voc/VOCdevkit/VOC2007/'
+    voc_data_dir = '/home/pufik/fyp/simple-faster-rcnn-pytorch/VOCdevkit/VOC2007'
+    tejani_data_dir = '/home/pufik/fyp/syndata-generation/myoutput'
     min_size = 600  # image resize
     max_size = 1000 # image resize
     num_workers = 8
@@ -30,12 +31,11 @@ class Config:
     plot_every = 40  # vis every N iter
 
     # preset
-    data = 'voc'
+    data = 'tejani'
     pretrained_model = 'vgg16'
 
     # training
     epoch = 14
-
 
     use_adam = False # Use Adam optimizer
     use_chainer = False # try match everything as chainer
