@@ -1,9 +1,10 @@
 import os
 import xml.etree.ElementTree as ET
+import yaml
 
 import numpy as np
 
-from .util import read_image
+from util import read_image
 
 
 class TejaniBboxDataset:
@@ -71,14 +72,18 @@ class TejaniBboxDataset:
         #             'for 2012 dataset. For 2007 dataset, you can pick \'test\''
         #             ' in addition to the above mentioned splits.'
         #         )
-        id_list_file = os.path.join(
-            data_dir, 'train.txt')
+        if split == 'test':
+            self.ids = range(sum(TEST_COUNTS))
+        else:
+            id_list_file = os.path.join(
+                data_dir, 'train.txt')
 
-        self.ids = [id_.strip() for id_ in open(id_list_file)]
+            self.ids = [id_.strip() for id_ in open(id_list_file)]
         self.data_dir = data_dir
         self.use_difficult = use_difficult
         self.return_difficult = return_difficult
         self.label_names = TEJANI_BBOX_LABEL_NAMES
+        self.split = split
 
     def __len__(self):
         print(len(self.ids))
@@ -97,37 +102,72 @@ class TejaniBboxDataset:
             tuple of an image and bounding boxes
 
         """
-        id_ = i/5 + 1
-        blendstyle = SYNDATA_BLEND_TYPES[i%5]
-        anno = ET.parse(
-            os.path.join(self.data_dir, 'annotations', str(int(id_)) + '.xml'))
-        bbox = list()
-        label = list()
-        difficult = list()
-        for obj in anno.findall('object'):
-            # when in not using difficult split, and the object is
-            # difficult, skipt it.
-            if not self.use_difficult and int(obj.find('difficult').text) == 1:
-                continue
+        if self.split == 'test':
+            id_ = 0
+            classId = 0
+            while True:
+                if (i < sum(TEST_COUNTS[:classId + 1]) and i >= sum(TEST_COUNTS[:classId])):
+                    id_ = i - sum(TEST_COUNTS[:classId])
+                    print(classId)
+                    break
+                classId += 1                 
+            anno = yaml.load(open(os.path.join(self.data_dir, '0' + str(classId + 1), 'gt.yml')))
+            bbox = list()
+            label = list()
+            difficult = list()
+            for obj in anno[id_]:
+                # when in not using difficult split, and the object is
+                # difficult, skipt it.
+                bndbox_anno = obj['obj_bb']
+                # subtract 1 to make pixel indexes 0-based
+                bbox.append(bndbox_anno)
+                name = obj['obj_id'] - 1
+                assert(name == classId)
+                label.append(name)
+            print (bbox, label)        
+            bbox = np.stack(bbox).astype(np.float32)
+            label = np.stack(label).astype(np.int32)
+            # When `use_difficult==False`, all elements in `difficult` are False.
+            difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
+                    
+            img_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), 'rgb',  str(id_).zfill(4) + '.png')
+            img = read_image(img_file, color=True)
 
-            difficult.append(int(obj.find('difficult').text))
-            bndbox_anno = obj.find('bndbox')
-            # subtract 1 to make pixel indexes 0-based
-            bbox.append([
-                int(bndbox_anno.find(tag).text) - 1
-                for tag in ('ymin', 'xmin', 'ymax', 'xmax')])
-            name = int(obj.find('name').text.lower().strip()) - 1
-            label.append(name)
-        print (bbox, label)        
-        bbox = np.stack(bbox).astype(np.float32)
-        label = np.stack(label).astype(np.int32)
-        # When `use_difficult==False`, all elements in `difficult` are False.
-        difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
-                   
-        img_file = os.path.join(self.data_dir, 'images', str(int(id_)) + '_' + blendstyle + '.jpg')
-        img = read_image(img_file, color=True)
+            return img, bbox, label, difficult
+            
+                    
+        else:
+            id_ = i/5 + 1
+            blendstyle = SYNDATA_BLEND_TYPES[i%5]
+            anno = ET.parse(
+                os.path.join(self.data_dir, 'annotations', str(int(id_)) + '.xml'))
+            bbox = list()
+            label = list()
+            difficult = list()
+            for obj in anno.findall('object'):
+                # when in not using difficult split, and the object is
+                # difficult, skipt it.
+                if not self.use_difficult and int(obj.find('difficult').text) == 1:
+                    continue
 
-        return img, bbox, label, difficult
+                difficult.append(int(obj.find('difficult').text))
+                bndbox_anno = obj.find('bndbox')
+                # subtract 1 to make pixel indexes 0-based
+                bbox.append([
+                    int(bndbox_anno.find(tag).text) - 1
+                    for tag in ('ymin', 'xmin', 'ymax', 'xmax')])
+                name = int(obj.find('name').text.lower().strip()) - 1
+                label.append(name)
+            #print (bbox, label)        
+            bbox = np.stack(bbox).astype(np.float32)
+            label = np.stack(label).astype(np.int32)
+            # When `use_difficult==False`, all elements in `difficult` are False.
+            difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
+                    
+            img_file = os.path.join(self.data_dir, 'images', str(int(id_)) + '_' + blendstyle + '.jpg')
+            img = read_image(img_file, color=True)
+
+            return img, bbox, label, difficult
 
     __getitem__ = get_example
 
@@ -141,9 +181,10 @@ TEJANI_BBOX_LABEL_NAMES = (
     'shampoo')
 
 SYNDATA_BLEND_TYPES = ['box', 'gaussian', 'motion', 'none', 'poisson']
+TEST_COUNTS = [265, 414, 543, 410, 95, 340]
 
-#dummyTD = TejaniBboxDataset('/home/pufik/fyp/syndata-generation/myoutput')
-#print(dummyTD.get_example(0))
+dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test', split='test')
+print(dummyTD.get_example(2050))
 
 
 

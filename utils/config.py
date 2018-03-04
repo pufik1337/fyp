@@ -9,6 +9,7 @@ class Config:
     # data
     voc_data_dir = '/home/pufik/fyp/simple-faster-rcnn-pytorch/VOCdevkit/VOC2007'
     tejani_data_dir = '/home/pufik/fyp/syndata-generation/myoutput'
+    tejani_test_dir = ''
     min_size = 600  # image resize
     max_size = 1000 # image resize
     num_workers = 8
