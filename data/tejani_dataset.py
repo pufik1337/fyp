@@ -1,6 +1,7 @@
 import os
 import xml.etree.ElementTree as ET
 import yaml
+import time
 
 import numpy as np
 
@@ -74,6 +75,9 @@ class TejaniBboxDataset:
         #         )
         if split == 'test':
             self.ids = range(sum(TEST_COUNTS))
+            self.anno = {}
+            for i in range(6):
+                self.anno[i] = yaml.load(open(os.path.join(data_dir, '0' + str(i + 1), 'gt.yml')))
         else:
             id_list_file = os.path.join(
                 data_dir, 'train.txt')
@@ -108,17 +112,17 @@ class TejaniBboxDataset:
             while True:
                 if (i < sum(TEST_COUNTS[:classId + 1]) and i >= sum(TEST_COUNTS[:classId])):
                     id_ = i - sum(TEST_COUNTS[:classId])
-                    print(classId)
+                    #print("Class id: ", classId)
                     break
                 classId += 1                 
-            anno = yaml.load(open(os.path.join(self.data_dir, '0' + str(classId + 1), 'gt.yml')))
             bbox = list()
             label = list()
             difficult = list()
-            for obj in anno[id_]:
+            for obj in self.anno[classId][id_]:
                 # when in not using difficult split, and the object is
                 # difficult, skipt it.
                 bndbox_anno = obj['obj_bb']
+                difficult.append(0)
                 # subtract 1 to make pixel indexes 0-based
                 bbox.append(bndbox_anno)
                 name = obj['obj_id'] - 1
@@ -130,8 +134,11 @@ class TejaniBboxDataset:
             # When `use_difficult==False`, all elements in `difficult` are False.
             difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
                     
-            img_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), 'rgb',  str(id_).zfill(4) + '.png')
+            img_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), 'rgb',  str(id_).zfill(4) + '.jpg')
+            start = time.time()
             img = read_image(img_file, color=True)
+            end = time.time()
+            print("Image load time: %f", end - start)
 
             return img, bbox, label, difficult
             
@@ -165,7 +172,10 @@ class TejaniBboxDataset:
             difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
                     
             img_file = os.path.join(self.data_dir, 'images', str(int(id_)) + '_' + blendstyle + '.jpg')
+            start = time.time()
             img = read_image(img_file, color=True)
+            end = time.time()
+            print("Image load time: %f", end - start)
 
             return img, bbox, label, difficult
 
@@ -184,7 +194,12 @@ SYNDATA_BLEND_TYPES = ['box', 'gaussian', 'motion', 'none', 'poisson']
 TEST_COUNTS = [265, 414, 543, 410, 95, 340]
 
 dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test', split='test')
-print(dummyTD.get_example(2050))
+dummyTrainValTD = TejaniBboxDataset('/home/pufik/fyp/syndata-generation/myoutput', split='trainval')
+#
+for i in range(0, 300):
+    print("Example  ", i, " :", dummyTD.get_example(i))
+    #print("Example  ", i, " :", dummyTrainValTD.get_example(i))
+
 
 
 

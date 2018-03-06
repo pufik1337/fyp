@@ -1,9 +1,10 @@
 import os
 import xml.etree.ElementTree as ET
+import time
 
 import numpy as np
 
-from .util import read_image
+from util import read_image
 
 
 class VOCBboxDataset:
@@ -83,6 +84,7 @@ class VOCBboxDataset:
         self.label_names = VOC_BBOX_LABEL_NAMES
 
     def __len__(self):
+        print(self.ids)
         return len(self.ids)
 
     def get_example(self, i):
@@ -125,8 +127,10 @@ class VOCBboxDataset:
 
         # Load a image
         img_file = os.path.join(self.data_dir, 'JPEGImages', id_ + '.jpg')
+        start = time.time()
         img = read_image(img_file, color=True)
-
+        end = time.time()
+        print("Image load time: %f", end - start)
         # if self.return_difficult:
         #     return img, bbox, label, difficult
         return img, bbox, label, difficult
@@ -155,3 +159,8 @@ VOC_BBOX_LABEL_NAMES = (
     'sofa',
     'train',
     'tvmonitor')
+
+dummyTD = VOCBboxDataset('/home/pufik/fyp/simple-faster-rcnn-pytorch/VOCdevkit/VOC2007', split='trainval')
+
+for i in range(0, 300):
+    print("Example  ", i, " :", dummyTD.get_example(i))

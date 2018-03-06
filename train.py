@@ -107,6 +107,8 @@ def train(**kwargs):
                 # roi confusion matrix
                 trainer.vis.img('roi_cm', at.totensor(trainer.roi_cm.conf, False).float())
         eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
+        print("Epoch %d evaluation result : ", epoch)
+        print(eval_result)
 
         if eval_result['map'] > best_map:
             best_map = eval_result['map']
