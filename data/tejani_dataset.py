@@ -124,6 +124,8 @@ class TejaniBboxDataset:
                 bndbox_anno = obj['obj_bb']
                 difficult.append(0)
                 # subtract 1 to make pixel indexes 0-based
+                bndbox_anno[2] = bndbox_anno[2] + bndbox_anno[0]
+                bndbox_anno[3] = bndbox_anno[3] + bndbox_anno[1]
                 bbox.append(bndbox_anno)
                 name = obj['obj_id'] - 1
                 assert(name == classId)
@@ -187,4 +189,8 @@ TEJANI_BBOX_LABEL_NAMES = (
 SYNDATA_BLEND_TYPES = ['box', 'gaussian', 'motion', 'none', 'poisson']
 TEST_COUNTS = [265, 414, 543, 410, 95, 340]
 
+#dummyTD = TejaniBboxDataset('/home/pufik/fyp/syndata-generation/myoutput/', split='trainval')
+
+# for i in range(0, 1):
+#     print("Example  ", i, " :", dummyTD.get_example(i))
 
