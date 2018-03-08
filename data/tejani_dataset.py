@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from util import read_image
+from .util import read_image
 
 
 class TejaniBboxDataset:
@@ -128,17 +128,14 @@ class TejaniBboxDataset:
                 name = obj['obj_id'] - 1
                 assert(name == classId)
                 label.append(name)
-            print (bbox, label)        
+            #print (bbox, label)        
             bbox = np.stack(bbox).astype(np.float32)
             label = np.stack(label).astype(np.int32)
             # When `use_difficult==False`, all elements in `difficult` are False.
             difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
                     
             img_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), 'rgb',  str(id_).zfill(4) + '.jpg')
-            start = time.time()
             img = read_image(img_file, color=True)
-            end = time.time()
-            print("Image load time: %f", end - start)
 
             return img, bbox, label, difficult
             
@@ -172,10 +169,7 @@ class TejaniBboxDataset:
             difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
                     
             img_file = os.path.join(self.data_dir, 'images', str(int(id_)) + '_' + blendstyle + '.jpg')
-            start = time.time()
             img = read_image(img_file, color=True)
-            end = time.time()
-            print("Image load time: %f", end - start)
 
             return img, bbox, label, difficult
 
@@ -192,14 +186,5 @@ TEJANI_BBOX_LABEL_NAMES = (
 
 SYNDATA_BLEND_TYPES = ['box', 'gaussian', 'motion', 'none', 'poisson']
 TEST_COUNTS = [265, 414, 543, 410, 95, 340]
-
-dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test', split='test')
-dummyTrainValTD = TejaniBboxDataset('/home/pufik/fyp/syndata-generation/myoutput', split='trainval')
-#
-for i in range(0, 300):
-    print("Example  ", i, " :", dummyTD.get_example(i))
-    #print("Example  ", i, " :", dummyTrainValTD.get_example(i))
-
-
 
 

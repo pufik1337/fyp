@@ -118,7 +118,7 @@ class Dataset:
 class TestDataset:
     def __init__(self, opt, split='test', use_difficult=True):
         self.opt = opt
-        self.db = TejaniBboxDataset(opt.tejani_data_dir, split=split, use_difficult=use_difficult)
+        self.db = TejaniBboxDataset(opt.tejani_test_dir, split=split, use_difficult=use_difficult)
         #self.db = VOCBboxDataset(opt.voc_data_dir, split=split, use_difficult=use_difficult)
 
     def __getitem__(self, idx):
