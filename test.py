@@ -37,7 +37,17 @@ def eval(dataloader, faster_rcnn, test_num=1):
         pred_labels += pred_labels_
         pred_scores += pred_scores_
         if ii == test_num: break
-
+        if ii%100 == 0:
+                ori_img_ = inverse_normalize(at.tonumpy(imgs[0]))
+                gt_img = visdom_bbox(ori_img_,
+                                     at.tonumpy(gt_bboxes_[0]),
+                                     at.tonumpy(gt_labels_[0]))
+                trainer.vis.img('gt_img', gt_img)
+                pred_img = visdom_bbox(ori_img_,
+                                       at.tonumpy(pred_bboxes_[0]),
+                                       at.tonumpy(pred_labels_[0]).reshape(-1),
+                                       at.tonumpy(pred_scores_[0]))
+                trainer.vis.img('pred_img', pred_img)
     result = eval_detection_voc(
         pred_bboxes, pred_labels, pred_scores,
         gt_bboxes, gt_labels, gt_difficults,
