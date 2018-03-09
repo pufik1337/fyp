@@ -124,8 +124,10 @@ class TejaniBboxDataset:
                 bndbox_anno = obj['obj_bb']
                 difficult.append(0)
                 # subtract 1 to make pixel indexes 0-based
-                bndbox_anno[2] = bndbox_anno[2] + bndbox_anno[0]
-                bndbox_anno[3] = bndbox_anno[3] + bndbox_anno[1]
+                bndbox_anno[0] = obj['obj_bb'][1]
+                bndbox_anno[1] = obj['obj_bb'][0]
+                bndbox_anno[2] = obj['obj_bb'][3] + obj['obj_bb'][1]
+                bndbox_anno[3] = obj['obj_bb'][2] + obj['obj_bb'][0]
                 bbox.append(bndbox_anno)
                 name = obj['obj_id'] - 1
                 assert(name == classId)
