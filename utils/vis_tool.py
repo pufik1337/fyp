@@ -34,6 +34,14 @@ VOC_BBOX_LABEL_NAMES = (
     'tv',
 )
 
+TEJANI_BBOX_LABEL_NAMES = (
+    'camera',
+    'cup',
+    'joystick',
+    'juice',
+    'milk',
+    'shampoo')
+
 
 def vis_image(img, ax=None):
     """Visualize a color image.
@@ -57,6 +65,7 @@ def vis_image(img, ax=None):
     # CHW -> HWC
     img = img.transpose((1, 2, 0))
     ax.imshow(img.astype(np.uint8))
+    print ("Size sent to matplotlib: ", img.shape)
     return ax
 
 
@@ -88,7 +97,7 @@ def vis_bbox(img, bbox, label=None, score=None, ax=None):
 
     """
 
-    label_names = list(VOC_BBOX_LABEL_NAMES) + ['bg']
+    label_names = list(TEJANI_BBOX_LABEL_NAMES) + ['bg']
     # add for index `-1`
     if label is not None and not len(bbox) == len(label):
         raise ValueError('The length of label must be same as that of bbox')
