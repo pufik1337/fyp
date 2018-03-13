@@ -127,7 +127,7 @@ class TestDataset:
         #img = preprocess(ori_img)
         img, bbox, label, scale = self.tsf((ori_img, bbox, label))
         #return img, ori_img.shape[1:], bbox, label, difficult
-        return img.copy(), bbox.copy(), label.copy(), difficult
+        return img.copy(), ori_img.shape[1:], bbox.copy(), label.copy(), difficult
 
     def __len__(self):
         return len(self.db)
