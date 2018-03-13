@@ -120,11 +120,14 @@ class TestDataset:
         self.opt = opt
         self.db = TejaniBboxDataset(opt.tejani_test_dir, split=split, use_difficult=use_difficult)
         #self.db = VOCBboxDataset(opt.voc_data_dir, split=split, use_difficult=use_difficult)
+        self.tsf = Transform(opt.min_size, opt.max_size)
 
     def __getitem__(self, idx):
         ori_img, bbox, label, difficult = self.db.get_example(idx)
-        img = preprocess(ori_img)
-        return img, ori_img.shape[1:], bbox, label, difficult
+        #img = preprocess(ori_img)
+        img, bbox, label, scale = self.tsf((ori_img, bbox, label))
+        #return img, ori_img.shape[1:], bbox, label, difficult
+        return img.copy(), bbox.copy(), label.copy(), difficult
 
     def __len__(self):
         return len(self.db)
