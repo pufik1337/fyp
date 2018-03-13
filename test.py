@@ -13,6 +13,8 @@ from trainer import FasterRCNNTrainer
 from utils import array_tool as at
 from utils.vis_tool import visdom_bbox
 from utils.eval_tool import eval_detection_voc
+from . import util
+
 
 # fix for ulimit
 # https://github.com/pytorch/pytorch/issues/973#issuecomment-346405667
@@ -24,7 +26,7 @@ resource.setrlimit(resource.RLIMIT_NOFILE, (20480, rlimit[1]))
 matplotlib.use('agg')
 
 
-def eval(dataloader, faster_rcnn, test_num=1):
+def eval(dataloader, faster_rcnn, trainer, test_num=1):
     pred_bboxes, pred_labels, pred_scores = list(), list(), list()
     gt_bboxes, gt_labels, gt_difficults = list(), list(), list()
     for ii, (imgs, sizes, gt_bboxes_, gt_labels_, gt_difficults_) in tqdm(enumerate(dataloader)):
@@ -39,12 +41,14 @@ def eval(dataloader, faster_rcnn, test_num=1):
         if ii == test_num: break
         if ii%100 == 0:
                 ori_img_ = inverse_normalize(at.tonumpy(imgs[0]))
+                resized_gt_bbox = util.resize_bbox(gt_bboxes[0], (600, 800), (480, 640))
+                resized_pred_bbox = util.resize_bbox(pred_bboxes_[0], (600, 800), (480, 640))
                 gt_img = visdom_bbox(ori_img_,
-                                     at.tonumpy(gt_bboxes_[0]),
+                                     at.tonumpy(resized_gt_bbox),
                                      at.tonumpy(gt_labels_[0]))
                 trainer.vis.img('gt_img', gt_img)
                 pred_img = visdom_bbox(ori_img_,
-                                       at.tonumpy(pred_bboxes_[0]),
+                                       at.tonumpy(resized_pred_bbox),
                                        at.tonumpy(pred_labels_[0]).reshape(-1),
                                        at.tonumpy(pred_scores_[0]))
                 trainer.vis.img('pred_img', pred_img)
@@ -82,7 +86,7 @@ def test(**kwargs):
 
     trainer.vis.text(dataset.db.label_names, win='labels')
     print('Evaluating model:')
-    eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
+    eval_result = eval(test_dataloader, faster_rcnn, trainer, test_num=opt.test_num)
     print(eval_result)
 
 if __name__ == '__main__':
