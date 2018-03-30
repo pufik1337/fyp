@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from .util import read_image
+from util import read_image
 
 
 class TejaniBboxDataset:
@@ -78,11 +78,17 @@ class TejaniBboxDataset:
             self.anno = {}
             for i in range(6):
                 self.anno[i] = yaml.load(open(os.path.join(data_dir, '0' + str(i + 1), 'gt.yml')))
+        elif split == 'trainval':
+            self.ids = range(sum(TRAINVAL_COUNTS))
+            self.anno = {}
+            for i in range(6):
+                self.anno[i] = yaml.load(open(os.path.join(data_dir, '0' + str(i + 1), 'gt.yml')))
         else:
             id_list_file = os.path.join(
                 data_dir, 'train.txt')
 
-            self.ids = [id_.strip() for id_ in open(id_list_file)]
+            #self.ids = [id_.strip() for id_ in open(id_list_file)]
+            self.ids = range(sum(TRAINVAL_COUNTS))
         self.data_dir = data_dir
         self.use_difficult = use_difficult
         self.return_difficult = return_difficult
@@ -106,15 +112,24 @@ class TejaniBboxDataset:
             tuple of an image and bounding boxes
 
         """
-        if self.split == 'test':
+        if self.split == 'test' or self.split == 'trainval':
             id_ = 0
             classId = 0
             while True:
-                if (i < sum(TEST_COUNTS[:classId + 1]) and i >= sum(TEST_COUNTS[:classId])):
-                    id_ = i - sum(TEST_COUNTS[:classId])
-                    #print("Class id: ", classId)
-                    break
-                classId += 1                 
+                if self.split =='test':
+                    if (i < sum(TEST_COUNTS[:classId + 1]) and i >= sum(TEST_COUNTS[:classId])):
+                        id_ = i - sum(TEST_COUNTS[:classId])
+                        id_ = TEST_IDS[classId][id_]
+                        #print("Class id: ", classId)
+                        break
+                    classId += 1
+                else:
+                    if (i < sum(TRAINVAL_COUNTS[:classId + 1]) and i >= sum(TRAINVAL_COUNTS[:classId])):
+                        id_ = i - sum(TRAINVAL_COUNTS[:classId])
+                        id_ = TRAINVAL_IDS[classId][id_]
+                        #print("Class id: ", classId)
+                        break
+                    classId += 1                    
             bbox = list()
             label = list()
             difficult = list()
@@ -126,8 +141,8 @@ class TejaniBboxDataset:
                 # subtract 1 to make pixel indexes 0-based
                 bndbox_anno[0] = obj['obj_bb'][1]
                 bndbox_anno[1] = obj['obj_bb'][0]
-                bndbox_anno[2] = obj['obj_bb'][3] + obj['obj_bb'][1]
-                bndbox_anno[3] = obj['obj_bb'][2] + obj['obj_bb'][0]
+                bndbox_anno[3] = obj['obj_bb'][3] + obj['obj_bb'][1]
+                bndbox_anno[2] = obj['obj_bb'][2] + obj['obj_bb'][0]
                 bbox.append(bndbox_anno)
                 name = obj['obj_id'] - 1
                 assert(name == classId)
@@ -189,10 +204,26 @@ TEJANI_BBOX_LABEL_NAMES = (
     'shampoo')
 
 SYNDATA_BLEND_TYPES = ['box', 'gaussian', 'motion', 'none', 'poisson']
-TEST_COUNTS = [265, 414, 543, 410, 95, 340]
+SEQ_COUNTS = [265, 414, 543, 410, 95, 340]
+TEST_COUNTS = []
+TRAINVAL_COUNTS = []
+TRAINVAL_IDS = {}
+TEST_IDS = {}
 
-#dummyTD = TejaniBboxDataset('/home/pufik/fyp/syndata-generation/myoutput/', split='trainval')
+for i in range(len(SEQ_COUNTS)):
+    np.random.seed(0)
+    scrambled_ids = np.random.permutation(SEQ_COUNTS[i])
+    boundary = round(0.3*SEQ_COUNTS[i])
+    TRAINVAL_COUNTS += [boundary]
+    TEST_COUNTS += [SEQ_COUNTS[i] - boundary]
+    TRAINVAL_IDS[i] = scrambled_ids[0:boundary]
+    TEST_IDS[i] = scrambled_ids[boundary:SEQ_COUNTS[i]]
 
-# for i in range(0, 1):
-#     print("Example  ", i, " :", dummyTD.get_example(i))
+# print(TEST_IDS[0])
+# print(TRAINVAL_IDS[0])
+
+# dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='trainval')
+
+# for i in range(0, 10):
+#      print("Example  ", i, " :", dummyTD.get_example(i))
 
