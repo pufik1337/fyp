@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from util import read_image
+from .util import read_image
 
 
 class TejaniBboxDataset:
@@ -136,13 +136,13 @@ class TejaniBboxDataset:
             for obj in self.anno[classId][id_]:
                 # when in not using difficult split, and the object is
                 # difficult, skipt it.
-                bndbox_anno = obj['obj_bb']
+                bndbox_anno = obj['obj_bb'].copy()
                 difficult.append(0)
                 # subtract 1 to make pixel indexes 0-based
                 bndbox_anno[0] = obj['obj_bb'][1]
                 bndbox_anno[1] = obj['obj_bb'][0]
-                bndbox_anno[3] = obj['obj_bb'][3] + obj['obj_bb'][1]
-                bndbox_anno[2] = obj['obj_bb'][2] + obj['obj_bb'][0]
+                bndbox_anno[2] = obj['obj_bb'][3] + obj['obj_bb'][1]
+                bndbox_anno[3] = obj['obj_bb'][2] + obj['obj_bb'][0]
                 bbox.append(bndbox_anno)
                 name = obj['obj_id'] - 1
                 assert(name == classId)
@@ -219,11 +219,11 @@ for i in range(len(SEQ_COUNTS)):
     TRAINVAL_IDS[i] = scrambled_ids[0:boundary]
     TEST_IDS[i] = scrambled_ids[boundary:SEQ_COUNTS[i]]
 
-# print(TEST_IDS[0])
-# print(TRAINVAL_IDS[0])
+#print(TEST_IDS[0])
+#print(TRAINVAL_IDS[0])
 
-# dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='trainval')
+#dummyTD = TejaniBboxDataset('/home/ubuntu/fyp/test/', split='trainval')
 
-# for i in range(0, 10):
-#      print("Example  ", i, " :", dummyTD.get_example(i))
+#for i in range(0, 1):
+#     print("Example  ", i, " :", dummyTD.get_example(i))
 
