@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from .util import read_image
+from util import read_image
 
 
 class TejaniBboxDataset:
@@ -131,12 +131,21 @@ class TejaniBboxDataset:
                         break
                     classId += 1                    
             bbox = list()
+            pose = list()
             label = list()
             difficult = list()
             for obj in self.anno[classId][id_]:
                 # when in not using difficult split, and the object is
                 # difficult, skipt it.
                 bndbox_anno = obj['obj_bb'].copy()
+                rot_anno = np.array(obj['cam_R_m2c'].copy())
+                trans_anno = np.array(obj['cam_t_m2c'].copy())
+                rot_anno = rot_anno.reshape(3, 3)
+                cos_phi = (np.trace(rot_anno) - 1.0) / 2.0
+                phi = np.arccos(cos_phi)
+                rot_anno = phi*(rot_anno - np.transpose(rot_anno))/(2*np.sin(phi))
+                pose_vec = [rot_anno[2][1], rot_anno[2][0], rot_anno[1][0], trans_anno[2]]
+                print(pose_vec)
                 difficult.append(0)
                 # subtract 1 to make pixel indexes 0-based
                 bndbox_anno[0] = obj['obj_bb'][1]
@@ -144,6 +153,7 @@ class TejaniBboxDataset:
                 bndbox_anno[2] = obj['obj_bb'][3] + obj['obj_bb'][1]
                 bndbox_anno[3] = obj['obj_bb'][2] + obj['obj_bb'][0]
                 bbox.append(bndbox_anno)
+                pose.append(pose_vec)
                 name = obj['obj_id'] - 1
                 assert(name == classId)
                 label.append(name)
@@ -156,7 +166,7 @@ class TejaniBboxDataset:
             img_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), 'rgb',  str(id_).zfill(4) + '.jpg')
             img = read_image(img_file, color=True)
 
-            return img, bbox, label, difficult
+            return img, bbox, pose, label, difficult
             
                     
         else:
@@ -222,8 +232,8 @@ for i in range(len(SEQ_COUNTS)):
 #print(TEST_IDS[0])
 #print(TRAINVAL_IDS[0])
 
-#dummyTD = TejaniBboxDataset('/home/ubuntu/fyp/test/', split='trainval')
+dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='trainval')
 
-#for i in range(0, 1):
-#     print("Example  ", i, " :", dummyTD.get_example(i))
+for i in range(0, 10):
+     print("Example  ", i, " :", dummyTD.get_example(i))
 
