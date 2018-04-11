@@ -40,7 +40,7 @@ class ProposalTargetCreator(object):
         self.neg_iou_thresh_hi = neg_iou_thresh_hi
         self.neg_iou_thresh_lo = neg_iou_thresh_lo  # NOTE: py-faster-rcnn默认的值是0.1
 
-    def __call__(self, roi, bbox, label, pose
+    def __call__(self, roi, bbox, label, pose,
                  loc_normalize_mean=(0., 0., 0., 0.),
                  loc_normalize_std=(0.1, 0.1, 0.2, 0.2)):
         """Assigns ground truth to sampled proposals.
@@ -100,6 +100,7 @@ class ProposalTargetCreator(object):
         # Offset range of classes from [0, n_fg_class - 1] to [1, n_fg_class].
         # The label with value 0 is the background.
         gt_roi_label = label[gt_assignment] + 1
+        gt_roi_pose = pose[gt_assignment]
 
         # Select foreground RoIs as those with >= pos_iou_thresh IoU.
         pos_index = np.where(max_iou >= self.pos_iou_thresh)[0]
@@ -122,7 +123,7 @@ class ProposalTargetCreator(object):
         # The indices that we're selecting (both positive and negative).
         keep_index = np.append(pos_index, neg_index)
         gt_roi_label = gt_roi_label[keep_index]
-        gt_roi_pose = pose[keep_index]
+        gt_roi_pose = gt_roi_pose[keep_index]
         gt_roi_label[pos_roi_per_this_image:] = 0  # negative labels --> 0
         sample_roi = roi[keep_index]
 
