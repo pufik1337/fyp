@@ -62,9 +62,9 @@ def train(**kwargs):
                                        shuffle=False, \
                                        pin_memory=True
                                        )
-    faster_rcnn = FasterRCNNVGG16(n_fg_class=6)
+    faster_rcnn = Deep6DRCNNVGG16(n_fg_class=6)
     print('model construct completed')
-    trainer = FasterRCNNTrainer(faster_rcnn).cuda()
+    trainer = FasterRCNNPoseTrainer(faster_rcnn).cuda()
     if opt.load_path:
         trainer.load(opt.load_path)
         print('load pretrained model from %s' % opt.load_path)
