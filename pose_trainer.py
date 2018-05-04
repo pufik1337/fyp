@@ -17,6 +17,7 @@ LossTuple = namedtuple('LossTuple',
                         'rpn_cls_loss',
                         'roi_loc_loss',
                         'roi_cls_loss',
+                        'roi_pose_loss',
                         'total_loss'
                         ])
 
@@ -63,7 +64,7 @@ class FasterRCNNPoseTrainer(nn.Module):
         self.roi_cm = ConfusionMeter(7)
         self.meters = {k: AverageValueMeter() for k in LossTuple._fields}  # average loss
 
-    def forward(self, imgs, bboxes, labels, poses, scale):
+    def forward(self, imgs, bboxes, poses, labels, scale):
         """Forward Faster R-CNN and calculate losses.
 
         Here are notations used.
@@ -169,9 +170,9 @@ class FasterRCNNPoseTrainer(nn.Module):
 
         return LossTuple(*losses)
 
-    def train_step(self, imgs, bboxes, labels, scale):
+    def train_step(self, imgs, bboxes, poses, labels, scale):
         self.optimizer.zero_grad()
-        losses = self.forward(imgs, bboxes, labels, scale)
+        losses = self.forward(imgs, bboxes, poses, labels, scale)
         losses.total_loss.backward()
         self.optimizer.step()
         self.update_meters(losses)
