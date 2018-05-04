@@ -261,12 +261,12 @@ def _fast_rcnn_loc_loss(pred_loc, gt_loc, gt_label, sigma):
     return loc_loss
 
 def _pose_loss(pred_pose, gt_pose, gt_label, sigma):
-    in_weight = t.zeros(gt_loc.shape).cuda()
+    in_weight = t.zeros(gt_pose.shape).cuda()
     # Localization loss is calculated only for positive rois.
     # NOTE:  unlike origin implementation, 
     # we don't need inside_weight and outside_weight, they can calculate by gt_label
     in_weight[(gt_label > 0).view(-1, 1).expand_as(in_weight).cuda()] = 1
-    pose_loss = _smooth_l1_loss(pred_loc, gt_loc, Variable(in_weight), sigma)
+    pose_loss = _smooth_l1_loss(pred_pose, gt_pose, Variable(in_weight), sigma)
     # Normalize by total number of negtive and positive rois.
     pose_loss /= (gt_label >= 0).sum()  # ignore gt_label==-1 for rpn_loss
     return pose_loss
