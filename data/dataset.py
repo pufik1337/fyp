@@ -104,12 +104,12 @@ class Dataset:
         self.tsf = Transform(opt.min_size, opt.max_size)
 
     def __getitem__(self, idx):
-        ori_img, bbox, label, difficult = self.db.get_example(idx)
+        ori_img, bbox, pose, label, difficult = self.db.get_example(idx)
 
         img, bbox, label, scale = self.tsf((ori_img, bbox, label))
         # TODO: check whose stride is negative to fix this instead copy all
         # some of the strides of a given numpy array are negative.
-        return img.copy(), bbox.copy(), label.copy(), scale
+        return img.copy(), bbox.copy(), pose.copy(), label.copy(), scale
 
     def __len__(self):
         return len(self.db)
