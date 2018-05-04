@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from util import read_image
+from .util import read_image
 
 
 class TejaniBboxDataset:
@@ -159,6 +159,7 @@ class TejaniBboxDataset:
                 label.append(name)
             #print (bbox, label)        
             bbox = np.stack(bbox).astype(np.float32)
+            pose = np.stack(pose).astype(np.float32)
             label = np.stack(label).astype(np.int32)
             # When `use_difficult==False`, all elements in `difficult` are False.
             difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
@@ -232,8 +233,8 @@ for i in range(len(SEQ_COUNTS)):
 #print(TEST_IDS[0])
 #print(TRAINVAL_IDS[0])
 
-dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='trainval')
+#dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='trainval')
 
-for i in range(0, 10):
-     print("Example  ", i, " :", dummyTD.get_example(i))
+#for i in range(0, 10):
+#     print("Example  ", i, " :", dummyTD.get_example(i))
 
