@@ -162,7 +162,7 @@ class VGG16PoseHead(nn.Module):
     def __init__(self, n_class, roi_size, spatial_scale,
                  classifier):
         # n_class includes the background
-        super(VGG16RoIHead, self).__init__()
+        super(VGG16PoseHead, self).__init__()
 
         self.classifier = classifier
         self.cls_loc = nn.Linear(4096, n_class * 4)
