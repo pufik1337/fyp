@@ -152,6 +152,7 @@ class FasterRCNNPoseTrainer(nn.Module):
                               at.totensor(gt_roi_label).long()]
         gt_roi_label = at.tovariable(gt_roi_label).long()
         gt_roi_loc = at.tovariable(gt_roi_loc)
+        gt_roi_pose = at.tovariable(gt_roi_pose)
 
         roi_loc_loss = _fast_rcnn_loc_loss(
             roi_loc.contiguous(),
@@ -161,7 +162,7 @@ class FasterRCNNPoseTrainer(nn.Module):
 
         roi_cls_loss = nn.CrossEntropyLoss()(roi_score, gt_roi_label.cuda())
 
-        roi_pose_loss = _pose_loss(roi_pose, gt_roi_pose, gt_roi_label.data, self.pose_sigma)
+        roi_pose_loss = _pose_loss(roi_pose.contiguous(), gt_roi_pose, gt_roi_label.data, self.pose_sigma)
 
         self.roi_cm.add(at.totensor(roi_score, False), gt_roi_label.data.long())
 

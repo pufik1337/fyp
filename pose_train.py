@@ -76,11 +76,10 @@ def train(**kwargs):
         trainer.reset_meters()
         for ii, (img, bbox_, pose_, label_, scale) in tqdm(enumerate(dataloader)):
             scale = at.scalar(scale)
-            print(type(bbox_), type(pose_))
             img, bbox, pose, label = img.cuda().float(), bbox_.cuda(), pose_.cuda(), label_.cuda()
             img, bbox, pose, label = Variable(img), Variable(bbox), Variable(pose), Variable(label)
             trainer.train_step(img, bbox, pose, label, scale)
-            print (bbox, label)        
+            print ("pose: ", pose)        
 
             if (ii + 1) % opt.plot_every == 0:
                 if os.path.exists(opt.debug_file):

@@ -96,7 +96,6 @@ class TejaniBboxDataset:
         self.split = split
 
     def __len__(self):
-        print(len(self.ids))
         return len(self.ids)
 
     def get_example(self, i):
