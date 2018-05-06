@@ -123,10 +123,10 @@ class TestDataset:
         #self.tsf = Transform(opt.min_size, opt.max_size)
 
     def __getitem__(self, idx):
-        ori_img, bbox, label, difficult = self.db.get_example(idx)
+        ori_img, bbox, pose, label, difficult = self.db.get_example(idx)
         img = preprocess(ori_img)
         #img, bbox, label, scale = self.tsf((ori_img, bbox, label))
-        return img, ori_img.shape[1:], bbox, label, difficult
+        return img, ori_img.shape[1:], bbox, pose, label, difficult
         #return img.copy(), ori_img.shape[1:], bbox.copy(), label.copy(), difficult
 
     def __len__(self):

@@ -25,9 +25,9 @@ matplotlib.use('agg')
 
 
 def eval(dataloader, faster_rcnn, test_num=10000):
-    pred_bboxes, pred_labels, pred_scores = list(), list(), list()
-    gt_bboxes, gt_labels, gt_difficults = list(), list(), list()
-    for ii, (imgs, sizes, gt_bboxes_, gt_labels_, gt_difficults_) in tqdm(enumerate(dataloader)):
+    pred_bboxes, pred_poses, pred_labels, pred_scores = list(), list(), list(), list()
+    gt_bboxes, gt_poses, gt_labels, gt_difficults = list(), list(), list(), list()
+    for ii, (imgs, sizes, gt_bboxes_, gt_poses_, gt_labels_, gt_difficults_) in tqdm(enumerate(dataloader)):
         sizes = [sizes[0][0], sizes[1][0]]
         pred_bboxes_, pred_labels_, pred_scores_ = faster_rcnn.predict(imgs, [sizes])
         gt_bboxes += list(gt_bboxes_.numpy())
@@ -79,7 +79,6 @@ def train(**kwargs):
             img, bbox, pose, label = img.cuda().float(), bbox_.cuda(), pose_.cuda(), label_.cuda()
             img, bbox, pose, label = Variable(img), Variable(bbox), Variable(pose), Variable(label)
             trainer.train_step(img, bbox, pose, label, scale)
-            print ("pose: ", pose)        
 
             if (ii + 1) % opt.plot_every == 0:
                 if os.path.exists(opt.debug_file):
