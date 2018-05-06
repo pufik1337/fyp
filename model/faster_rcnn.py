@@ -122,9 +122,9 @@ class FasterRCNN(nn.Module):
         h = self.extractor(x)
         rpn_locs, rpn_scores, rois, roi_indices, anchor = \
             self.rpn(h, img_size, scale)
-        roi_cls_locs, roi_scores = self.head(
+        roi_cls_locs, roi_scores, roi_poses = self.head(
             h, rois, roi_indices)
-        return roi_cls_locs, roi_scores, rois, roi_indices
+        return roi_cls_locs, roi_scores, roi_poses, rois, roi_indices
 
     def use_preset(self, preset):
         """Use the given preset during prediction.
@@ -149,7 +149,7 @@ class FasterRCNN(nn.Module):
             self.score_thresh = 0.7
         elif preset == 'evaluate':
             self.nms_thresh = 0.3
-            self.score_thresh = 0.05
+            self.score_thresh = 0.65
         else:
             raise ValueError('preset must be visualize or evaluate')
 
@@ -222,7 +222,8 @@ class FasterRCNN(nn.Module):
         for img, size in zip(prepared_imgs, sizes):
             img = t.autograd.Variable(at.totensor(img).float()[None], volatile=True)
             scale = img.shape[3] / size[1]
-            roi_cls_loc, roi_scores, rois, _ = self(img, scale=scale)
+            print(self)
+            roi_cls_loc, roi_scores, roi_poses, rois, _ = self(img, scale=scale)
             # We are assuming that batch size is 1.
             roi_score = roi_scores.data
             roi_cls_loc = roi_cls_loc.data
