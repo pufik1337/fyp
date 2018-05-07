@@ -9,7 +9,7 @@ from model.utils.bbox_tools import bbox_iou
 
 
 def eval_detection_voc(
-        pred_bboxes, pred_labels, pred_scores, gt_bboxes, gt_labels,
+        pred_bboxes, pred_poses, pred_labels, pred_scores, gt_bboxes, gt_poses, gt_labels,
         gt_difficults=None,
         iou_thresh=0.5, use_07_metric=False):
     """Calculate average precisions based on evaluation code of PASCAL VOC.
@@ -77,7 +77,9 @@ def eval_detection_voc(
 
     ap = calc_detection_voc_ap(prec, rec, use_07_metric=use_07_metric)
 
-    return {'ap': ap, 'map': np.nanmean(ap)}
+    pose_error = calc_pose_error(pred_poses, gt_poses)
+
+    return {'ap': ap, 'map': np.nanmean(ap), 'pose error': pose_error}
 
 
 def calc_detection_voc_prec_rec(
@@ -302,3 +304,14 @@ def calc_detection_voc_ap(prec, rec, use_07_metric=False):
             ap[l] = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
 
     return ap
+
+def calc_pose_error(pred_poses, gt_poses):
+    pred_poses = iter(pred_poses)
+    gt_poses = iter(gt_poses)
+
+    error = np.zeros(4)
+
+    for pred_pose, gt_pose in zip(pred_poses, gt_poses):
+        error += np.absolute(pred_pose - gt_pose)
+    
+    return error

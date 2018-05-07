@@ -29,11 +29,13 @@ def eval(dataloader, faster_rcnn, test_num=10000):
     gt_bboxes, gt_poses, gt_labels, gt_difficults = list(), list(), list(), list()
     for ii, (imgs, sizes, gt_bboxes_, gt_poses_, gt_labels_, gt_difficults_) in tqdm(enumerate(dataloader)):
         sizes = [sizes[0][0], sizes[1][0]]
-        pred_bboxes_, pred_labels_, pred_scores_ = faster_rcnn.predict(imgs, [sizes])
+        pred_bboxes_, pred_poses_, pred_labels_, pred_scores_ = faster_rcnn.predict(imgs, [sizes])
         gt_bboxes += list(gt_bboxes_.numpy())
+        gt_poses += list(gt_poses_.numpy())
         gt_labels += list(gt_labels_.numpy())
         gt_difficults += list(gt_difficults_.numpy())
         pred_bboxes += pred_bboxes_
+        pred_poses += pred_poses_
         pred_labels += pred_labels_
         pred_scores += pred_scores_
         if ii == test_num: break

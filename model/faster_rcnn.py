@@ -217,6 +217,7 @@ class FasterRCNN(nn.Module):
         else:
              prepared_imgs = imgs 
         bboxes = list()
+        poses = list()
         labels = list()
         scores = list()
         for img, size in zip(prepared_imgs, sizes):
@@ -225,6 +226,7 @@ class FasterRCNN(nn.Module):
             print(self)
             roi_cls_loc, roi_scores, roi_poses, rois, _ = self(img, scale=scale)
             # We are assuming that batch size is 1.
+            pose = roi_poses.data
             roi_score = roi_scores.data
             roi_cls_loc = roi_cls_loc.data
             roi = at.totensor(rois) / scale
@@ -254,12 +256,13 @@ class FasterRCNN(nn.Module):
 
             bbox, label, score = self._suppress(raw_cls_bbox, raw_prob)
             bboxes.append(bbox)
+            poses.append(pose)
             labels.append(label)
             scores.append(score)
 
         self.use_preset('evaluate')
         self.train()
-        return bboxes, labels, scores
+        return bboxes, poses, labels, scores
 
     def get_optimizer(self):
         """
