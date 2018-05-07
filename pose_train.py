@@ -97,11 +97,11 @@ def train(**kwargs):
                 trainer.vis.img('gt_img', gt_img)
 
                 # plot predicti bboxes
-                _bboxes, _labels, _poses, _scores = trainer.faster_rcnn.predict([ori_img_], visualize=True)
+                _bboxes, _poses, _labels, _scores = trainer.faster_rcnn.predict([ori_img_], visualize=True)
                 print("Predicted : \n")
-                print(pose)
-                print("Ground truth : \n")
                 print(_poses)
+                print("Ground truth : \n")
+                print(pose)
                 pred_img = visdom_bbox(ori_img_,
                                        at.tonumpy(_bboxes[0]),
                                        at.tonumpy(_labels[0]).reshape(-1),
