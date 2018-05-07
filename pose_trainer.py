@@ -1,16 +1,16 @@
-from collections import namedtuple
 import time
-from torch.nn import functional as F
-from model.utils.creator_tool import AnchorTargetCreator, ProposalTargetCreator
+from collections import namedtuple
 
-from torch import nn
 import torch as t
+from torch import nn
 from torch.autograd import Variable
-from utils import array_tool as at
-from utils.vis_tool import Visualizer
+from torch.nn import functional as F
 
+from model.utils.creator_tool import AnchorTargetCreator, ProposalTargetCreator
+from torchnet.meter import AverageValueMeter, ConfusionMeter
+from utils import array_tool as at
 from utils.config import opt
-from torchnet.meter import ConfusionMeter, AverageValueMeter
+from utils.vis_tool import Visualizer
 
 LossTuple = namedtuple('LossTuple',
                        ['rpn_loc_loss',
@@ -65,7 +65,7 @@ class FasterRCNNPoseTrainer(nn.Module):
         self.meters = {k: AverageValueMeter() for k in LossTuple._fields}  # average loss
 
     def forward(self, imgs, bboxes, poses, labels, scale):
-        """Forward Faster R-CNN and calculate losses.
+        """Forward Faster R-CNN and calculate losses. - OVERRIDES NETHOD IN FASTER RCNN? (check by printing)
 
         Here are notations used.
 
@@ -96,8 +96,10 @@ class FasterRCNNPoseTrainer(nn.Module):
         _, _, H, W = imgs.shape
         img_size = (H, W)
 
+        # forward through feature extraction CNN
         features = self.faster_rcnn.extractor(imgs)
 
+        # forward features through RPN to get proposals
         rpn_locs, rpn_scores, rois, roi_indices, anchor = \
             self.faster_rcnn.rpn(features, img_size, scale)
 
@@ -121,6 +123,15 @@ class FasterRCNNPoseTrainer(nn.Module):
             self.loc_normalize_std)
         # NOTE it's all zero because now it only support for batch=1 now
         sample_roi_index = t.zeros(len(sample_roi))
+
+        print("Shape of poses: " gt_roi_pose.shape)
+        print("Shape of labels:" gt_roi_label.shape)
+
+        print("Poses: " gt_roi_pose)
+        print("Labels:" gt_roi_label)
+
+
+        # forward through the head to get BB locations and poses       
         roi_cls_loc, roi_score, roi_pose = self.faster_rcnn.head(
             features,
             sample_roi,
@@ -163,6 +174,9 @@ class FasterRCNNPoseTrainer(nn.Module):
         roi_cls_loss = nn.CrossEntropyLoss()(roi_score, gt_roi_label.cuda())
 
         roi_pose_loss = _pose_loss(roi_pose.contiguous(), gt_roi_pose, gt_roi_label.data, self.pose_sigma)
+        print("Predicted Pose: ", roi_pose.contiguous())
+        print("Ground Truth Pose: ", gt_roi_pose)
+        print("ROI Pose loss: ", roi_pose_loss)
 
         self.roi_cm.add(at.totensor(roi_score, False), gt_roi_label.data.long())
 
