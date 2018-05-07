@@ -41,8 +41,8 @@ def eval(dataloader, faster_rcnn, test_num=10000):
         if ii == test_num: break
 
     result = eval_detection_voc(
-        pred_bboxes, pred_labels, pred_scores,
-        gt_bboxes, gt_labels, gt_difficults,
+        pred_bboxes, pred_poses, pred_labels, pred_scores,
+        gt_bboxes, gt_poses, gt_labels, gt_difficults,
         use_07_metric=True)
     return result
 
@@ -97,11 +97,11 @@ def train(**kwargs):
                 trainer.vis.img('gt_img', gt_img)
 
                 # plot predicti bboxes
-                _bboxes, _labels, _scores = trainer.faster_rcnn.predict([ori_img_], visualize=True)
+                _bboxes, _labels, _poses, _scores = trainer.faster_rcnn.predict([ori_img_], visualize=True)
                 print("Predicted : \n")
-                print(_bboxes, _labels)
+                print(pose)
                 print("Ground truth : \n")
-                print(bbox, label)
+                print(_poses)
                 pred_img = visdom_bbox(ori_img_,
                                        at.tonumpy(_bboxes[0]),
                                        at.tonumpy(_labels[0]).reshape(-1),
