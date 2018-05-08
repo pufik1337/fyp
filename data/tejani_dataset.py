@@ -2,10 +2,11 @@ import os
 import xml.etree.ElementTree as ET
 import yaml
 import time
+import math
 
 import numpy as np
 
-from .util import read_image
+from util import read_image
 
 
 class TejaniBboxDataset:
@@ -141,7 +142,9 @@ class TejaniBboxDataset:
                 trans_anno = np.array(obj['cam_t_m2c'].copy())
                 rot_anno = rot_anno.reshape(3, 3)
                 cos_phi = (np.trace(rot_anno) - 1.0) / 2.0
+                cos_phi = np.minimum(np.maximum(cos_phi, -0.999999), 0.999999) #needed to prevent mapping to nan
                 phi = np.arccos(cos_phi)
+                print("phi: ", phi)
                 rot_anno = phi*(rot_anno - np.transpose(rot_anno))/(2*np.sin(phi))
                 pose_vec = [rot_anno[2][1], rot_anno[2][0], rot_anno[1][0], trans_anno[2]]
                 print(pose_vec)
@@ -232,8 +235,15 @@ for i in range(len(SEQ_COUNTS)):
 #print(TEST_IDS[0])
 #print(TRAINVAL_IDS[0])
 
-#dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='trainval')
+# dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='test')
 
-#for i in range(0, 10):
-#     print("Example  ", i, " :", dummyTD.get_example(i))
+# for i in [348, 992]:
+#     thisEx = dummyTD.get_example(i)[2]
+#     for example in thisEx:
+#         for j in range(4):
+#             if math.isnan(example[j]):
+#                 print("NaN found in example ", i)
+
+
+    #print("Example  ", i, " :", dummyTD.get_example(i)[2])
 
