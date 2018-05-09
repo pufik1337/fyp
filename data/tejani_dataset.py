@@ -6,7 +6,7 @@ import math
 
 import numpy as np
 
-from util import read_image
+from .util import read_image
 
 
 class TejaniBboxDataset:
@@ -144,10 +144,8 @@ class TejaniBboxDataset:
                 cos_phi = (np.trace(rot_anno) - 1.0) / 2.0
                 cos_phi = np.minimum(np.maximum(cos_phi, -0.999999), 0.999999) #needed to prevent mapping to nan
                 phi = np.arccos(cos_phi)
-                print("phi: ", phi)
                 rot_anno = phi*(rot_anno - np.transpose(rot_anno))/(2*np.sin(phi))
-                pose_vec = [rot_anno[2][1], rot_anno[2][0], rot_anno[1][0], trans_anno[2]]
-                print(pose_vec)
+                pose_vec = [rot_anno[2][1], rot_anno[2][0], rot_anno[1][0], trans_anno[2]/1000.0]
                 difficult.append(0)
                 # subtract 1 to make pixel indexes 0-based
                 bndbox_anno[0] = obj['obj_bb'][1]

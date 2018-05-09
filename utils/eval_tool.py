@@ -311,7 +311,7 @@ def calc_pose_error(pred_poses, gt_poses):
 
     error = np.zeros(4)
 
-    for pred_pose, gt_pose in zip(pred_poses, gt_poses):
-        error += np.absolute(pred_pose - gt_pose)
+    #for pred_pose, gt_pose in zip(pred_poses, gt_poses):
+    #    error += np.absolute(np.subtract(pred_pose, gt_pose))
     
     return error

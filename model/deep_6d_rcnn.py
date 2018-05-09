@@ -165,13 +165,20 @@ class VGG16PoseHead(nn.Module):
         super(VGG16PoseHead, self).__init__()
 
         self.classifier = classifier
+        self.pose_classifier = classifier
+
         self.cls_loc = nn.Linear(4096, n_class * 4)
         self.score = nn.Linear(4096, n_class)
-        self.pose = nn.Linear(4096, 4)
+        self.pose_fc1 = nn.Linear(4096, 4096)
+        self.pose_fc2 = nn.Linear(4096, 384)
+        self.pose_reg = nn.Linear(384, 4)
 
         normal_init(self.cls_loc, 0, 0.001)
         normal_init(self.score, 0, 0.01)
-        normal_init(self.pose, 0, 0.01)
+        normal_init(self.pose_fc1, 0, 0.001)
+        normal_init(self.pose_fc2, 0, 0.001)
+        normal_init(self.pose_reg, 0, 0.01)
+        
 
         self.n_class = n_class
         self.roi_size = roi_size
@@ -208,7 +215,11 @@ class VGG16PoseHead(nn.Module):
         fc7 = self.classifier(pool)
         roi_cls_locs = self.cls_loc(fc7)
         roi_scores = self.score(fc7)
-        roi_pose = self.pose(fc7)
+
+        fc8 = self.pose_classifier(pool)
+        fc9 = self.pose_fc1(fc8)
+        fc10 = self.pose_fc2(fc9)
+        roi_pose = self.pose_reg(fc10)
         return roi_cls_locs, roi_scores, roi_pose
 
 
