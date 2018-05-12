@@ -11,6 +11,7 @@ from torch.autograd import Variable
 from torch.utils import data as data_
 from pose_trainer import FasterRCNNPoseTrainer
 from utils import array_tool as at
+from utils import pose_tool as pt
 from utils.vis_tool import visdom_bbox
 from utils.eval_tool import eval_detection_voc
 
@@ -80,7 +81,8 @@ def train(**kwargs):
             scale = at.scalar(scale)
             img, bbox, pose, label = img.cuda().float(), bbox_.cuda(), pose_.cuda(), label_.cuda()
             img, bbox, pose, label = Variable(img), Variable(bbox), Variable(pose), Variable(label)
-            trainer.train_step(img, bbox, pose, label, scale)
+            pose_vec = pt.transform_pose_mat(pose)
+            trainer.train_step(img, bbox, pose_vec, label, scale)
 
             if (ii + 1) % opt.plot_every == 0:
                 if os.path.exists(opt.debug_file):

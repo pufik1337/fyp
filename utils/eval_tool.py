@@ -3,6 +3,8 @@ from __future__ import division
 from collections import defaultdict
 import itertools
 import numpy as np
+import pose_tool as pt
+import pose_error
 import six
 
 from model.utils.bbox_tools import bbox_iou
@@ -305,13 +307,53 @@ def calc_detection_voc_ap(prec, rec, use_07_metric=False):
 
     return ap
 
-def calc_pose_error(pred_poses, gt_poses):
+def recover_6d_pose(pose_vec, bbox):
+    # implements the rodriguez exponential map to recover the 3x3 rotation matrix and 
+    # calculates the translation vector using the regressed depth and bounding box
+    # inputs: pose_vec - a 3x1 vector in so(3)
+    # bbox: a 4x1 vector in the form of (ymin, xmin, ymax, xmax)
+    w = np.zeros([3, 3])
+    w[2, 1] = pose_vec[0]
+    w[1, 2] = -pose_vec[0]
+    w[2, 0] = -pose_vec[1]
+    w[0, 2] = pose_vec[1]
+    w[1, 0] = pose_vec[2]
+    w[0, 1] = -pose_vec[2]
+    w_magnitude = np.linalg.norm(pose_vec[0:3])
+
+    rot_mat = np.identity(3) + (np.sin(w_magnitude)/w_magnitude)*w + ((1 - np.cos(w_magnitude))/(w_magnitude**2))*(np.matmul(w, w))
+
+    # parameters of the intrinsic camera matrix
+    fx, cx, fy, cy = 571.9737, 319.5, 571.0073, 239.5
+
+    # get rid of the magic number later
+    tz = pose_vec[3]*1000.0
+
+    ux = (bbox[1] + bbox[3])/2.0
+    uy = (bbox[0] + bbox[2])/2.0
+
+    tx = (ux - cx)*tz/fx
+    ty = (uy - cy)*tz/fy
+
+    t_vec = [tx, ty, tz]
+
+    return rot_mat, t_vec
+
+def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, model_path, n_fg_class):
     pred_poses = iter(pred_poses)
     gt_poses = iter(gt_poses)
+    pred_labels = iter(pred_labels)
+    gt_labels = iter(gt_labels)
+    pred_bboxes = iter(pred_bboxes)
 
-    error = np.zeros(4)
+    models = pt.load_models(model_path, n_fg_class)
 
-    #for pred_pose, gt_pose in zip(pred_poses, gt_poses):
-    #    error += np.absolute(np.subtract(pred_pose, gt_pose))
+    error = 0.0
+
+    for pred_pose, gt_pose, pred_label, gt_label, pred_bbox in zip(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes):
+        pred_r, pred_t = pt.recover_6d_pose(pred_pose, pred_bbox)
+        gt_r, gt_t = gt_pose[0:3, :], gt_pose[3, :]
+        if pred_label == gt_label:
+            error += pose_error.add(pred_r, pred_t, gt_r, gt_t, models[gt_label])
     
     return error
