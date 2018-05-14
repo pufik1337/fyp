@@ -13,7 +13,7 @@ from pose_trainer import FasterRCNNPoseTrainer
 from utils import array_tool as at
 from utils import pose_tool as pt
 from utils.vis_tool import visdom_bbox
-from utils.eval_tool import eval_detection_voc
+from utils.eval_tool import eval_network_tejani
 
 # fix for ulimit
 # https://github.com/pytorch/pytorch/issues/973#issuecomment-346405667
@@ -41,11 +41,11 @@ def eval(dataloader, faster_rcnn, test_num=10000):
         pred_scores += pred_scores_
         if ii == test_num: break
 
-    result = eval_detection_voc(
-        pred_bboxes, pred_poses, pred_labels, pred_scores,
-        gt_bboxes, gt_poses, gt_labels, gt_difficults,
-        use_07_metric=True)
-    return result
+   # result = eval_network_tejani(
+    #    pred_bboxes, pred_poses, pred_labels, pred_scores,
+     #   gt_bboxes, gt_poses, gt_labels, gt_difficults, "/home/ubuntu/fyp/models",
+      #  use_07_metric=True)
+    return 0
 
 
 def train(**kwargs):
@@ -76,14 +76,17 @@ def train(**kwargs):
     best_map = 0
     lr_ = opt.lr
     for epoch in range(opt.epoch):
+        #print("in epoch")
         trainer.reset_meters()
+        #print("just before enumerate")
         for ii, (img, bbox_, pose_, label_, scale) in tqdm(enumerate(dataloader)):
+            #print("inside enumerate")
             scale = at.scalar(scale)
+            #print("pose :", pose_)
             img, bbox, pose, label = img.cuda().float(), bbox_.cuda(), pose_.cuda(), label_.cuda()
             img, bbox, pose, label = Variable(img), Variable(bbox), Variable(pose), Variable(label)
-            pose_vec = pt.transform_pose_mat(pose)
-            trainer.train_step(img, bbox, pose_vec, label, scale)
-
+            trainer.train_step(img, bbox, pose, label, scale)
+            
             if (ii + 1) % opt.plot_every == 0:
                 if os.path.exists(opt.debug_file):
                     ipdb.set_trace()
@@ -127,6 +130,7 @@ def train(**kwargs):
             lr_ = lr_ * opt.lr_decay
 
         trainer.vis.plot('test_map', eval_result['map'])
+        trainer.vis.plot('test_pose_add', eval_result['pose_error'])
         log_info = 'lr:{}, map:{},loss:{}'.format(str(lr_),
                                                   str(eval_result['map']),
                                                   str(trainer.get_meter_data()))

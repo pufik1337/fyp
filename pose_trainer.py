@@ -124,11 +124,11 @@ class FasterRCNNPoseTrainer(nn.Module):
         # NOTE it's all zero because now it only support for batch=1 now
         sample_roi_index = t.zeros(len(sample_roi))
 
-        print("Shape of poses: ", gt_roi_pose.shape)
-        print("Shape of labels: ", gt_roi_label.shape)        
-        print("GT Poses: ", gt_roi_pose)
-        print("GT non-ROI poses: ", pose)
-        print("Labels: ", gt_roi_label)
+        #print("Shape of poses: ", gt_roi_pose.shape)
+        #print("Shape of labels: ", gt_roi_label.shape)        
+        #print("GT Poses: ", gt_roi_pose)
+        #print("GT non-ROI poses: ", pose)
+        #print("Labels: ", gt_roi_label)
 
 
         # forward through the head to get BB locations and poses       
@@ -174,9 +174,9 @@ class FasterRCNNPoseTrainer(nn.Module):
         roi_cls_loss = nn.CrossEntropyLoss()(roi_score, gt_roi_label.cuda())
 
         roi_pose_loss = _pose_loss(roi_pose.contiguous(), gt_roi_pose, gt_roi_label.data, self.pose_sigma)
-        print("Predicted Pose: ", roi_pose.contiguous())
-        print("Ground Truth Pose: ", gt_roi_pose)
-        print("ROI Pose loss: ", roi_pose_loss)
+        #print("Predicted Pose: ", roi_pose.contiguous())
+        #print("Ground Truth Pose: ", gt_roi_pose)
+        #print("ROI Pose loss: ", roi_pose_loss)
 
         self.roi_cm.add(at.totensor(roi_score, False), gt_roi_label.data.long())
 
@@ -184,7 +184,7 @@ class FasterRCNNPoseTrainer(nn.Module):
         #losses = [rpn_loc_loss, rpn_cls_loss, roi_loc_loss, roi_cls_loss, 0*roi_pose_loss]
         
         losses = losses + [sum(losses)]
-        print("losses: ", losses)
+        #print("losses: ", losses)
         return LossTuple(*losses)
 
     def train_step(self, imgs, bboxes, poses, labels, scale):

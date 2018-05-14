@@ -6,7 +6,7 @@ import math
 
 import numpy as np
 
-from util import read_image
+from .util import read_image
 
 
 class TejaniBboxDataset:
@@ -99,7 +99,7 @@ class TejaniBboxDataset:
     def __len__(self):
         return len(self.ids)
 
-    def get_example(self, i, mode='rgb'):
+    def get_example(self, i, mode='rgb', train=True):
         """Returns the i-th example.
 
         Returns a color image and bounding boxes. The image is in CHW format.
@@ -141,12 +141,16 @@ class TejaniBboxDataset:
                 rot_anno = np.array(obj['cam_R_m2c'].copy())
                 trans_anno = np.array(obj['cam_t_m2c'].copy())
                 rot_anno = rot_anno.reshape(3, 3)
-                #trans_anno = trans_anno.reshape(1, 3)
-                #cos_phi = (np.trace(rot_anno) - 1.0) / 2.0
-                #cos_phi = np.minimum(np.maximum(cos_phi, -0.999999), 0.999999) #needed to prevent mapping to nan
-                #phi = np.arccos(cos_phi)
-                #rot_anno = phi*(rot_anno - np.transpose(rot_anno))/(2*np.sin(phi))
-                #pose_vec = [rot_anno[2][1], -rot_anno[2][0], rot_anno[1][0], trans_anno[2]/1000.0]
+                #trans_anno = trans_anno.reshape(1, 3)i
+                if not train:
+                    pose.append(np.vstack((rot_anno, trans_anno)))
+                else:
+                    cos_phi = (np.trace(rot_anno) - 1.0) / 2.0
+                    cos_phi = np.minimum(np.maximum(cos_phi, -0.999999), 0.999999) #needed to prevent mapping to nan
+                    phi = np.arccos(cos_phi)
+                    rot_anno = phi*(rot_anno - np.transpose(rot_anno))/(2*np.sin(phi))
+                    pose_vec = [rot_anno[2][1], -rot_anno[2][0], rot_anno[1][0], trans_anno[2]/1000.0]
+                    pose.append(pose_vec)
                 difficult.append(0)
                 # subtract 1 to make pixel indexes 0-based
                 bndbox_anno[0] = obj['obj_bb'][1]
@@ -154,7 +158,8 @@ class TejaniBboxDataset:
                 bndbox_anno[2] = obj['obj_bb'][3] + obj['obj_bb'][1]
                 bndbox_anno[3] = obj['obj_bb'][2] + obj['obj_bb'][0]
                 bbox.append(bndbox_anno)
-                pose.append(np.vstack((rot_anno, trans_anno)))
+                #pose.append(np.vstack((rot_anno, trans_anno)))
+                #pose.append(pose_vec)
                 name = obj['obj_id'] - 1
                 assert(name == classId)
                 label.append(name)
@@ -167,7 +172,6 @@ class TejaniBboxDataset:
                     
             img_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), mode,  str(id_).zfill(4) + '.jpg')
             img = read_image(img_file, color=True)
-
             return img, bbox, pose, label, difficult
             
                     
@@ -234,60 +238,9 @@ for i in range(len(SEQ_COUNTS)):
 #print(TEST_IDS[0])
 #print(TRAINVAL_IDS[0])
 
-def transform_pose_mat(pose_mat):
-    # separatest the rotational and positional components of the pose 
-    # and implements the rodriguez exponential map in SO(3) to obtain a 3-parameter
-    # representation of the rotation;
-    # returns the 4D pose vector
+#dummyTD = TejaniBboxDataset('/home/ubuntu/fyp/test/', split='test')
 
-    rot_mat = pose_mat[0:3, :]
-    trans_vec = pose_mat[3, :]
-
-    cos_phi = (np.trace(rot_mat) - 1.0) / 2.0
-    cos_phi = np.minimum(np.maximum(cos_phi, -0.999999), 0.999999) #needed to prevent mapping to nan
-    phi = np.arccos(cos_phi)
-    rot_mat = phi*(rot_mat - np.transpose(rot_mat))/(2*np.sin(phi))
-
-    rot_vec = [rot_mat[2][1], -rot_mat[2][0], rot_mat[1][0]]
-    depth = trans_vec[2]
-    
-    return np.hstack((rot_vec, depth))
-
-def recover_6d_pose(pose_vec, bbox):
-    # implements the rodriguez exponential map to recover the 3x3 rotation matrix and 
-    # calculates the translation vector using the regressed depth and bounding box
-    # inputs: pose_vec - a 3x1 vector in so(3)
-    # bbox: a 4x1 vector in the form of (ymin, xmin, ymax, xmax)
-    w = np.zeros([3, 3])
-    w[2, 1] = pose_vec[0]
-    w[1, 2] = -pose_vec[0]
-    w[2, 0] = -pose_vec[1]
-    w[0, 2] = pose_vec[1]
-    w[1, 0] = pose_vec[2]
-    w[0, 1] = -pose_vec[2]
-    w_magnitude = np.linalg.norm(pose_vec[0:3])
-
-    rot_mat = np.identity(3) + (np.sin(w_magnitude)/w_magnitude)*w + ((1 - np.cos(w_magnitude))/(w_magnitude**2))*(np.matmul(w, w))
-
-    # parameters of the intrinsic camera matrix
-    fx, cx, fy, cy = 571.9737, 319.5, 571.0073, 239.5
-
-    # get rid of the magic number later
-    tz = pose_vec[3]
-
-    ux = (bbox[1] + bbox[3])/2.0
-    uy = (bbox[0] + bbox[2])/2.0
-
-    tx = (ux - cx)*tz/fx
-    ty = (uy - cy)*tz/fy
-
-    t_vec = [tx, ty, tz]
-
-    return rot_mat, t_vec
-
-# dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='test')
-
-# for i in range(1):
+#for i in range(len(dummyTD)):
 #     #     for j in range(4):
 #     #         if math.isnan(example[j]):
 #     #             print("NaN found in example ", i)

@@ -3,15 +3,15 @@ from __future__ import division
 from collections import defaultdict
 import itertools
 import numpy as np
-import pose_tool as pt
-import pose_error
+from . import pose_tool as pt
+from . import pose_error
 import six
 
 from model.utils.bbox_tools import bbox_iou
 
 
-def eval_detection_voc(
-        pred_bboxes, pred_poses, pred_labels, pred_scores, gt_bboxes, gt_poses, gt_labels,
+def eval_network_tejani(
+        pred_bboxes, pred_poses, pred_labels, pred_scores, gt_bboxes, gt_poses, gt_labels, model_path, n_fg_class=6,
         gt_difficults=None,
         iou_thresh=0.5, use_07_metric=False):
     """Calculate average precisions based on evaluation code of PASCAL VOC.
@@ -56,7 +56,7 @@ def eval_detection_voc(
         use_07_metric (bool): Whether to use PASCAL VOC 2007 evaluation metric
             for calculating average precision. The default value is
             :obj:`False`.
-
+1111111111111111111111111
     Returns:
         dict:
 
@@ -79,9 +79,9 @@ def eval_detection_voc(
 
     ap = calc_detection_voc_ap(prec, rec, use_07_metric=use_07_metric)
 
-    pose_error = calc_pose_error(pred_poses, gt_poses)
+    pose_error = calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, model_path, n_fg_class)
 
-    return {'ap': ap, 'map': np.nanmean(ap), 'pose error': pose_error}
+    return {'ap': ap, 'map': np.nanmean(ap), 'pose_error': pose_error}
 
 
 def calc_detection_voc_prec_rec(
@@ -306,38 +306,6 @@ def calc_detection_voc_ap(prec, rec, use_07_metric=False):
             ap[l] = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
 
     return ap
-
-def recover_6d_pose(pose_vec, bbox):
-    # implements the rodriguez exponential map to recover the 3x3 rotation matrix and 
-    # calculates the translation vector using the regressed depth and bounding box
-    # inputs: pose_vec - a 3x1 vector in so(3)
-    # bbox: a 4x1 vector in the form of (ymin, xmin, ymax, xmax)
-    w = np.zeros([3, 3])
-    w[2, 1] = pose_vec[0]
-    w[1, 2] = -pose_vec[0]
-    w[2, 0] = -pose_vec[1]
-    w[0, 2] = pose_vec[1]
-    w[1, 0] = pose_vec[2]
-    w[0, 1] = -pose_vec[2]
-    w_magnitude = np.linalg.norm(pose_vec[0:3])
-
-    rot_mat = np.identity(3) + (np.sin(w_magnitude)/w_magnitude)*w + ((1 - np.cos(w_magnitude))/(w_magnitude**2))*(np.matmul(w, w))
-
-    # parameters of the intrinsic camera matrix
-    fx, cx, fy, cy = 571.9737, 319.5, 571.0073, 239.5
-
-    # get rid of the magic number later
-    tz = pose_vec[3]*1000.0
-
-    ux = (bbox[1] + bbox[3])/2.0
-    uy = (bbox[0] + bbox[2])/2.0
-
-    tx = (ux - cx)*tz/fx
-    ty = (uy - cy)*tz/fy
-
-    t_vec = [tx, ty, tz]
-
-    return rot_mat, t_vec
 
 def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, model_path, n_fg_class):
     pred_poses = iter(pred_poses)

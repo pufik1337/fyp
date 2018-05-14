@@ -1,12 +1,11 @@
 import numpy as np
-import inout
+from . import inout
 
 def transform_pose_mat(pose_mat):
     # separatest the rotational and positional components of the pose 
     # and implements the rodriguez exponential map in SO(3) to obtain a 3-parameter
     # representation of the rotation;
     # returns the 4D pose vector
-
     rot_mat = pose_mat[0:3, :]
     trans_vec = pose_mat[3, :]
 
@@ -19,6 +18,11 @@ def transform_pose_mat(pose_mat):
     depth = trans_vec[2]
     
     return np.hstack((rot_vec, depth))
+
+def transform_poses(poses):
+    for pose_mat in poses[0]:
+        pose_mat = transform_pose_mat(pose_mat)
+    return poses
 
 def recover_6d_pose(pose_vec, bbox):
     # implements the rodriguez exponential map to recover the 3x3 rotation matrix and 
@@ -55,9 +59,9 @@ def recover_6d_pose(pose_vec, bbox):
 def load_models(model_path, n_fg_class):
     models = {}
     for classId in range(1, n_fg_class +1):
-        models[classId] = inout.load_ply(model_path + "obj" + str(classId).zfill(2) + ".ply")
+        models[classId] = inout.load_ply(model_path + "/obj_" + str(classId).zfill(2) + ".ply")
 
     return models
 
-#models = load_models("/home/pufik/fyp/tejani_et_al/models", 6)
-#print models
+#models = load_models("/home/ubuntu/fyp/models", 6)
+#print(models[1])

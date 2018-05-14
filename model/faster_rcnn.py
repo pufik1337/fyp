@@ -153,11 +153,15 @@ class FasterRCNN(nn.Module):
         else:
             raise ValueError('preset must be visualize or evaluate')
 
-    def _suppress(self, raw_cls_bbox, raw_prob):
+    def _suppress(self, raw_cls_bbox, raw_prob, raw_poses):
         bbox = list()
         label = list()
         score = list()
+        pose = list()
         # skip cls_id = 0 because it is the background class
+        print("Type of pose: ", raw_poses.shape)
+        print("Type of raw_cls_bbox: ", raw_cls_bbox.shape)
+        print("Type of raw_prob: ", raw_prob.shape)
         for l in range(1, self.n_class):
             cls_bbox_l = raw_cls_bbox.reshape((-1, self.n_class, 4))[:, l, :]
             prob_l = raw_prob[:, l]
@@ -167,14 +171,18 @@ class FasterRCNN(nn.Module):
             keep = non_maximum_suppression(
                 cp.array(cls_bbox_l), self.nms_thresh, prob_l)
             keep = cp.asnumpy(keep)
+            print("keep: ", len(keep))
             bbox.append(cls_bbox_l[keep])
             # The labels are in [0, self.n_class - 2].
             label.append((l - 1) * np.ones((len(keep),)))
             score.append(prob_l[keep])
+            #if len(keep) > 0:
+            pose.append(raw_poses[keep])
         bbox = np.concatenate(bbox, axis=0).astype(np.float32)
         label = np.concatenate(label, axis=0).astype(np.int32)
         score = np.concatenate(score, axis=0).astype(np.float32)
-        return bbox, label, score
+        pose = np.concatenate(pose, axis=0).astype(np.float32)
+        return bbox, pose, label, score
 
     def predict(self, imgs,sizes=None,visualize=False):
         """Detect objects from images.
@@ -253,8 +261,9 @@ class FasterRCNN(nn.Module):
 
             raw_cls_bbox = at.tonumpy(cls_bbox)
             raw_prob = at.tonumpy(prob)
+            raw_pose = at.tonumpy(pose)
 
-            bbox, label, score = self._suppress(raw_cls_bbox, raw_prob)
+            bbox, pose, label, score = self._suppress(raw_cls_bbox, raw_prob, raw_pose)
             bboxes.append(bbox)
             poses.append(pose)
             labels.append(label)
