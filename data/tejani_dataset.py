@@ -74,11 +74,22 @@ class TejaniBboxDataset:
         #             'for 2012 dataset. For 2007 dataset, you can pick \'test\''
         #             ' in addition to the above mentioned splits.'
         #         )
+        self.split = split
+        self.data_dir = data_dir
+        self.label_names = TEJANI_BBOX_LABEL_NAMES
+        self.return_difficult = return_difficult
+        self.use_difficult = use_difficult
+
         if split == 'test':
             self.ids = range(sum(TEST_COUNTS))
             self.anno = {}
             for i in range(6):
                 self.anno[i] = yaml.load(open(os.path.join(data_dir, '0' + str(i + 1), 'gt.yml')))
+            pose_sum = np.empty([1, 4])
+            for i in range(len(self)):
+                pose_sum = np.vstack((self.get_example(i)[2], pose_sum))
+            self.pose_mean = np.mean(pose_sum, axis=0)
+            self.pose_stddev = np.std(pose_sum, axis=0)
         elif split == 'trainval':
             self.ids = range(sum(TRAINVAL_COUNTS))
             self.anno = {}
@@ -90,16 +101,11 @@ class TejaniBboxDataset:
 
             #self.ids = [id_.strip() for id_ in open(id_list_file)]
             self.ids = range(sum(TRAINVAL_COUNTS))
-        self.data_dir = data_dir
-        self.use_difficult = use_difficult
-        self.return_difficult = return_difficult
-        self.label_names = TEJANI_BBOX_LABEL_NAMES
-        self.split = split
 
     def __len__(self):
         return len(self.ids)
 
-    def get_example(self, i, mode='rgb', train=True):
+    def get_example(self, i, mode='rgb', train=True, normalize=False):
         """Returns the i-th example.
 
         Returns a color image and bounding boxes. The image is in CHW format.
@@ -149,7 +155,9 @@ class TejaniBboxDataset:
                     cos_phi = np.minimum(np.maximum(cos_phi, -0.999999), 0.999999) #needed to prevent mapping to nan
                     phi = np.arccos(cos_phi)
                     rot_anno = phi*(rot_anno - np.transpose(rot_anno))/(2*np.sin(phi))
-                    pose_vec = [rot_anno[2][1], -rot_anno[2][0], rot_anno[1][0], trans_anno[2]/1000.0]
+                    pose_vec = [rot_anno[2][1], -rot_anno[2][0], rot_anno[1][0], trans_anno[2]]
+                    if normalize:
+                        pose_vec = np.divide(np.add(pose_vec, -self.pose_mean), self.pose_stddev)
                     pose.append(pose_vec)
                 difficult.append(0)
                 # subtract 1 to make pixel indexes 0-based
@@ -238,16 +246,30 @@ for i in range(len(SEQ_COUNTS)):
 #print(TEST_IDS[0])
 #print(TRAINVAL_IDS[0])
 
-#dummyTD = TejaniBboxDataset('/home/ubuntu/fyp/test/', split='test')
+#dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='test')
 
-#for i in range(len(dummyTD)):
+#pose_sum = np.empty([1, 4])
+
+#for i in range(1):
 #     #     for j in range(4):
 #     #         if math.isnan(example[j]):
 #     #             print("NaN found in example ", i)
-#     print("Example  ", i, " :", dummyTD.get_example(i)[2])
-#     ex = dummyTD.get_example(i)[2][0]
+#     print("Example  ", i, " :", dummyTD.get_example(i, normalize=True)[2])
+     #pose_sum = np.vstack((dummyTD.get_example(i)[2], pose_sum))
+     #ex = dummyTD.get_example(i, normalize =True)[2][0]
+     #transformed = recover_6d_pose(ex, dummyTD.get_example(i)[1][0], dummyTD.pose_mean, dummyTD.pose_stddev)
+     #print("transformed : ", transformed)
 #     posevec = transform_pose_mat(ex)
 #     print("posevec: ", posevec)
 #     pose = recover_6d_pose(posevec, dummyTD.get_example(i)[1][0])
 #     print("Recovered pose:  ", i, " : \n", pose)
+
+#print("pose sum: ", pose_sum, pose_sum.shape)
+#pose_mean = np.mean(pose_sum, axis=0)
+#pose_stddev = np.std(pose_sum, axis=0)
+#print("mean : ", pose_mean)
+#print("std dev : ", pose_stddev)
+
+#print("self mean : ", dummyTD.pose_mean)
+#print("self pose_stddev : ", dummyTD.pose_stddev)
 

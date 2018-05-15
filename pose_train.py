@@ -25,7 +25,7 @@ resource.setrlimit(resource.RLIMIT_NOFILE, (20480, rlimit[1]))
 matplotlib.use('agg')
 
 
-def eval(dataloader, faster_rcnn, test_num=10000):
+def eval(dataloader, faster_rcnn, pose_mean, pose_stddev, test_num=10000):
     pred_bboxes, pred_poses, pred_labels, pred_scores = list(), list(), list(), list()
     gt_bboxes, gt_poses, gt_labels, gt_difficults = list(), list(), list(), list()
     for ii, (imgs, sizes, gt_bboxes_, gt_poses_, gt_labels_, gt_difficults_) in tqdm(enumerate(dataloader)):
@@ -43,7 +43,7 @@ def eval(dataloader, faster_rcnn, test_num=10000):
 
     result = eval_network_tejani(
         pred_bboxes, pred_poses, pred_labels, pred_scores,
-        gt_bboxes, gt_poses, gt_labels,"/home/ubuntu/fyp/models", 6, gt_difficults,
+        gt_bboxes, gt_poses, gt_labels,"/home/ubuntu/fyp/models", pose_mean, pose_stddev, 6, gt_difficults,
         use_07_metric=True)
     return result
 
@@ -52,6 +52,9 @@ def train(**kwargs):
     opt._parse(kwargs)
 
     dataset = Dataset(opt)
+    pose_mean = dataset.pose_mean
+    pose_stddev = dataset.pose_stddev
+
     print('load data')
     dataloader = data_.DataLoader(dataset, \
                                   batch_size=1, \
@@ -117,7 +120,7 @@ def train(**kwargs):
                 trainer.vis.text(str(trainer.rpn_cm.value().tolist()), win='rpn_cm')
                 # roi confusion matrix
                 trainer.vis.img('roi_cm', at.totensor(trainer.roi_cm.conf, False).float())
-        eval_result = eval(test_dataloader, faster_rcnn, test_num=opt.test_num)
+        eval_result = eval(test_dataloader, faster_rcnn, pose_mean, pose_stddev, test_num=opt.test_num)
         print("Epoch %d evaluation result : ", epoch)
         print(eval_result)
 

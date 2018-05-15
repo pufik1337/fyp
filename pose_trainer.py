@@ -180,7 +180,7 @@ class FasterRCNNPoseTrainer(nn.Module):
 
         self.roi_cm.add(at.totensor(roi_score, False), gt_roi_label.data.long())
 
-        losses = [rpn_loc_loss, rpn_cls_loss, roi_loc_loss, roi_cls_loss, 2*roi_pose_loss]
+        losses = [rpn_loc_loss, rpn_cls_loss, roi_loc_loss, roi_cls_loss, roi_pose_loss]
         #losses = [rpn_loc_loss, rpn_cls_loss, roi_loc_loss, roi_cls_loss, 0*roi_pose_loss]
         
         losses = losses + [sum(losses)]

@@ -102,9 +102,10 @@ class Dataset:
         self.db = TejaniBboxDataset(opt.tejani_data_dir)
         #self.db = VOCBboxDataset(opt.voc_data_dir)
         self.tsf = Transform(opt.min_size, opt.max_size)
+        self.pose_mean, self.pose_stddev = self.db.pose_mean, self.db.pose_stddev
 
     def __getitem__(self, idx):
-        ori_img, bbox, pose, label, difficult = self.db.get_example(idx)
+        ori_img, bbox, pose, label, difficult = self.db.get_example(idx, normalize=True)
 
         img, bbox, label, scale = self.tsf((ori_img, bbox, label))
         # TODO: check whose stride is negative to fix this instead copy all

@@ -24,11 +24,14 @@ def transform_poses(poses):
         pose_mat = transform_pose_mat(pose_mat)
     return poses
 
-def recover_6d_pose(pose_vec, bbox):
+def recover_6d_pose(pose_vec, bbox, pose_mean, pose_stddev):
     # implements the rodriguez exponential map to recover the 3x3 rotation matrix and 
     # calculates the translation vector using the regressed depth and bounding box
     # inputs: pose_vec - a 3x1 vector in so(3)
     # bbox: a 4x1 vector in the form of (ymin, xmin, ymax, xmax)
+
+    pose_vec = np.add(np.multiply(pose_vec, pose_stddev), pose_mean)
+
     w = np.zeros([3, 3])
     w[2, 1] = pose_vec[0]
     w[1, 2] = -pose_vec[0]
@@ -44,7 +47,7 @@ def recover_6d_pose(pose_vec, bbox):
     fx, cx, fy, cy = 571.9737, 319.5, 571.0073, 239.5
 
     # get rid of the magic number later
-    tz = pose_vec[3]*1000.0
+    tz = pose_vec[3]
 
     ux = (bbox[1] + bbox[3])/2.0
     uy = (bbox[0] + bbox[2])/2.0

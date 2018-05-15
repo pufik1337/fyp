@@ -11,7 +11,7 @@ from model.utils.bbox_tools import bbox_iou
 
 
 def eval_network_tejani(
-        pred_bboxes, pred_poses, pred_labels, pred_scores, gt_bboxes, gt_poses, gt_labels, model_path, n_fg_class=6,
+        pred_bboxes, pred_poses, pred_labels, pred_scores, gt_bboxes, gt_poses, gt_labels, model_path, pose_mean, pose_std, n_fg_class=6,
         gt_difficults=None,
         iou_thresh=0.5, use_07_metric=False):
     """Calculate average precisions based on evaluation code of PASCAL VOC.
@@ -79,7 +79,7 @@ def eval_network_tejani(
 
     ap = calc_detection_voc_ap(prec, rec, use_07_metric=use_07_metric)
 
-    pose_error = calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, model_path, n_fg_class)
+    pose_error = calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, model_path, n_fg_class, pose_mean, pose_std)
 
     return {'ap': ap, 'map': np.nanmean(ap), 'pose_error': pose_error}
 
@@ -307,7 +307,7 @@ def calc_detection_voc_ap(prec, rec, use_07_metric=False):
 
     return ap
 
-def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, model_path, n_fg_class):
+def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, model_path, n_fg_class, pose_mean, pose_std):
     pred_poses = iter(pred_poses)
     gt_poses = iter(gt_poses)
     pred_labels = iter(pred_labels)
@@ -322,7 +322,7 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, m
     for pred_pose, gt_pose, pred_label, gt_label, pred_bbox in zip(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes):
         #print("pred_pose, gt_pose, pred_bbox: ", pred_pose, gt_pose, pred_bbox)
         for pred_pose_item, gt_pose_item, pred_label_item, gt_label_item, pred_bbox_item in zip(pred_pose, gt_pose, pred_label, gt_label, pred_bbox):
-            pred_r, pred_t = pt.recover_6d_pose(pred_pose_item, pred_bbox_item)
+            pred_r, pred_t = pt.recover_6d_pose(pred_pose_item, pred_bbox_item, pose_mean, pose_std)
             gt_r, gt_t = gt_pose_item[0:3, :], gt_pose_item[3, :]
             if pred_label_item == gt_label_item and gt_label_item != 0:
                 print("pred_r, gt_r, pred_t, gt_t: ", pred_r, gt_r, pred_t, gt_t)
