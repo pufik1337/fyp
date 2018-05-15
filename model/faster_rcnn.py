@@ -159,9 +159,9 @@ class FasterRCNN(nn.Module):
         score = list()
         pose = list()
         # skip cls_id = 0 because it is the background class
-        print("Type of pose: ", raw_poses.shape)
-        print("Type of raw_cls_bbox: ", raw_cls_bbox.shape)
-        print("Type of raw_prob: ", raw_prob.shape)
+        #print("Type of pose: ", raw_poses.shape)
+        #print("Type of raw_cls_bbox: ", raw_cls_bbox.shape)
+        #print("Type of raw_prob: ", raw_prob.shape)
         for l in range(1, self.n_class):
             cls_bbox_l = raw_cls_bbox.reshape((-1, self.n_class, 4))[:, l, :]
             prob_l = raw_prob[:, l]
@@ -171,7 +171,7 @@ class FasterRCNN(nn.Module):
             keep = non_maximum_suppression(
                 cp.array(cls_bbox_l), self.nms_thresh, prob_l)
             keep = cp.asnumpy(keep)
-            print("keep: ", len(keep))
+            #print("keep: ", len(keep))
             bbox.append(cls_bbox_l[keep])
             # The labels are in [0, self.n_class - 2].
             label.append((l - 1) * np.ones((len(keep),)))
@@ -231,7 +231,7 @@ class FasterRCNN(nn.Module):
         for img, size in zip(prepared_imgs, sizes):
             img = t.autograd.Variable(at.totensor(img).float()[None], volatile=True)
             scale = img.shape[3] / size[1]
-            print(self)
+            #print(self)
             roi_cls_loc, roi_scores, roi_poses, rois, _ = self(img, scale=scale)
             # We are assuming that batch size is 1.
             pose = roi_poses.data

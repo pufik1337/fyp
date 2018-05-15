@@ -44,7 +44,7 @@ def recover_6d_pose(pose_vec, bbox):
     fx, cx, fy, cy = 571.9737, 319.5, 571.0073, 239.5
 
     # get rid of the magic number later
-    tz = pose_vec[3]
+    tz = pose_vec[3]*1000.0
 
     ux = (bbox[1] + bbox[3])/2.0
     uy = (bbox[0] + bbox[2])/2.0
@@ -58,7 +58,7 @@ def recover_6d_pose(pose_vec, bbox):
 
 def load_models(model_path, n_fg_class):
     models = {}
-    for classId in range(1, n_fg_class +1):
+    for classId in range(1, n_fg_class + 1):
         models[classId] = inout.load_ply(model_path + "/obj_" + str(classId).zfill(2) + ".ply")
 
     return models

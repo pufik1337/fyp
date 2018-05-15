@@ -41,11 +41,11 @@ def eval(dataloader, faster_rcnn, test_num=10000):
         pred_scores += pred_scores_
         if ii == test_num: break
 
-   # result = eval_network_tejani(
-    #    pred_bboxes, pred_poses, pred_labels, pred_scores,
-     #   gt_bboxes, gt_poses, gt_labels, gt_difficults, "/home/ubuntu/fyp/models",
-      #  use_07_metric=True)
-    return 0
+    result = eval_network_tejani(
+        pred_bboxes, pred_poses, pred_labels, pred_scores,
+        gt_bboxes, gt_poses, gt_labels,"/home/ubuntu/fyp/models", 6, gt_difficults,
+        use_07_metric=True)
+    return result
 
 
 def train(**kwargs):

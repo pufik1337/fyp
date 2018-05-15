@@ -317,11 +317,16 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, m
     models = pt.load_models(model_path, n_fg_class)
 
     error = 0.0
+    counter = 0.0
 
     for pred_pose, gt_pose, pred_label, gt_label, pred_bbox in zip(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes):
-        pred_r, pred_t = pt.recover_6d_pose(pred_pose, pred_bbox)
-        gt_r, gt_t = gt_pose[0:3, :], gt_pose[3, :]
-        if pred_label == gt_label:
-            error += pose_error.add(pred_r, pred_t, gt_r, gt_t, models[gt_label])
+        #print("pred_pose, gt_pose, pred_bbox: ", pred_pose, gt_pose, pred_bbox)
+        for pred_pose_item, gt_pose_item, pred_label_item, gt_label_item, pred_bbox_item in zip(pred_pose, gt_pose, pred_label, gt_label, pred_bbox):
+            pred_r, pred_t = pt.recover_6d_pose(pred_pose_item, pred_bbox_item)
+            gt_r, gt_t = gt_pose_item[0:3, :], gt_pose_item[3, :]
+            if pred_label_item == gt_label_item and gt_label_item != 0:
+                print("pred_r, gt_r, pred_t, gt_t: ", pred_r, gt_r, pred_t, gt_t)
+                error += pose_error.add(pred_r, pred_t, gt_r, gt_t, models[gt_label_item])
+                counter += 1.0
     
-    return error
+    return error/counter
