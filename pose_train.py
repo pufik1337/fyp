@@ -124,8 +124,8 @@ def train(**kwargs):
         print("Epoch %d evaluation result : ", epoch)
         print(eval_result)
 
-        if eval_result['map'] > best_map:
-            best_map = eval_result['map']
+        if eval_result['pose_error'] > best_map:
+            best_map = eval_result['pose_error']
             best_path = trainer.save(best_map=best_map)
         if epoch == 9:
             trainer.load(best_path)
