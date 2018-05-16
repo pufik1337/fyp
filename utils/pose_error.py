@@ -26,3 +26,16 @@ def add(R_est, t_est, R_gt, t_gt, model):
     e = np.linalg.norm(pts_est - pts_gt, axis=1).mean()
     return e
 
+
+def add_metric(R_est, t_est, R_gt, t_gt, model):
+    avg_dist = add(R_est, t_est, R_gt, t_gt, model)
+    diameter = misc.calc_pts_diameter(model['pts'])
+
+    print("average dist:", avg_dist)
+    print("diameter of the model: ", diameter)
+
+    if avg_dist <= 0.1*diameter:
+        return 1.0
+    else:
+        return 0.0
+

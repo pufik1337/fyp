@@ -326,7 +326,7 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, m
             gt_r, gt_t = gt_pose_item[0:3, :], gt_pose_item[3, :]
             if pred_label_item == gt_label_item and gt_label_item != 0:
                 print("pred_r, gt_r, pred_t, gt_t: ", pred_r, gt_r, pred_t, gt_t)
-                error += pose_error.add(pred_r, pred_t, gt_r, gt_t, models[gt_label_item])
+                error += pose_error.add_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item])
                 counter += 1.0
     
     return error/counter
