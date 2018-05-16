@@ -27,9 +27,8 @@ def add(R_est, t_est, R_gt, t_gt, model):
     return e
 
 
-def add_metric(R_est, t_est, R_gt, t_gt, model):
+def add_metric(R_est, t_est, R_gt, t_gt, model, diameter):
     avg_dist = add(R_est, t_est, R_gt, t_gt, model)
-    diameter = misc.calc_pts_diameter(model['pts'])
 
     print("average dist:", avg_dist)
     print("diameter of the model: ", diameter)

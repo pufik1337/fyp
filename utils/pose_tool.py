@@ -1,5 +1,6 @@
 import numpy as np
 from . import inout
+from . import misc
 
 def transform_pose_mat(pose_mat):
     # separatest the rotational and positional components of the pose 
@@ -66,5 +67,14 @@ def load_models(model_path, n_fg_class):
 
     return models
 
-#models = load_models("/home/ubuntu/fyp/models", 6)
-#print(models[1])
+def get_model_diameters(models_dict):
+    diameters = {}
+    for key, model in models_dict.items():
+        diameters[key] = misc.calc_pts_diameter2(model['pts'])
+    
+    return diameters
+
+# models = load_models("/home/ubuntu/fyp/models", 6)
+# print(models[1])
+# diameters = get_model_diameters(models)
+# print(diameters)
