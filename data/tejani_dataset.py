@@ -85,11 +85,6 @@ class TejaniBboxDataset:
             self.anno = {}
             for i in range(6):
                 self.anno[i] = yaml.load(open(os.path.join(data_dir, '0' + str(i + 1), 'gt.yml')))
-            pose_sum = np.empty([1, 4])
-            for i in range(len(self)):
-                pose_sum = np.vstack((self.get_example(i)[2], pose_sum))
-            self.pose_mean = np.mean(pose_sum, axis=0)
-            self.pose_stddev = np.std(pose_sum, axis=0)
         elif split == 'trainval':
             self.ids = range(sum(TRAINVAL_COUNTS))
             self.anno = {}
@@ -101,6 +96,12 @@ class TejaniBboxDataset:
 
             #self.ids = [id_.strip() for id_ in open(id_list_file)]
             self.ids = range(sum(TRAINVAL_COUNTS))
+
+        pose_sum = np.empty([1, 4])
+        for i in range(len(self)):
+            pose_sum = np.vstack((self.get_example(i)[2], pose_sum))
+        self.pose_mean = np.mean(pose_sum, axis=0)
+        self.pose_stddev = np.std(pose_sum, axis=0)
 
     def __len__(self):
         return len(self.ids)
