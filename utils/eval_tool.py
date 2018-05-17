@@ -315,7 +315,8 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, m
     pred_bboxes = iter(pred_bboxes)
 
     models = pt.load_models(model_path, n_fg_class)
-    diameters = pt.get_model_diameters(models)
+    
+    diameters = {1:125.64433088293319, 2:136.6157742173282, 3:235.60199312418814, 4:220.63983688128488, 5:254.5407041137429, 6:188.56383670982623}
 
     error = 0.0
     counter = 0.0
