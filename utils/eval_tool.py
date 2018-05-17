@@ -79,9 +79,9 @@ def eval_network_tejani(
 
     ap = calc_detection_voc_ap(prec, rec, use_07_metric=use_07_metric)
 
-    pose_error = calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, model_path, n_fg_class, pose_mean, pose_std)
+    pose_add = calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, gt_bboxes, model_path, n_fg_class, pose_mean, pose_std)
 
-    return {'ap': ap, 'map': np.nanmean(ap), 'pose_error': pose_error}
+    return {'ap': ap, 'map': np.nanmean(ap), 'pose_add': pose_add, 'mean_pose_add': np.nanmean(pose_add)}
 
 
 def calc_detection_voc_prec_rec(
@@ -307,7 +307,7 @@ def calc_detection_voc_ap(prec, rec, use_07_metric=False):
 
     return ap
 
-def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, model_path, n_fg_class, pose_mean, pose_std):
+def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, gt_bboxes, model_path, n_fg_class, pose_mean, pose_std):
     pred_poses = iter(pred_poses)
     gt_poses = iter(gt_poses)
     pred_labels = iter(pred_labels)
@@ -318,17 +318,45 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, m
     
     diameters = {1:125.64433088293319, 2:136.6157742173282, 3:235.60199312418814, 4:220.63983688128488, 5:254.5407041137429, 6:188.56383670982623}
 
-    error = 0.0
-    counter = 0.0
+    ap = np.zeros(n_fg_class)
+    counts = np.zeros(n_fg_class)
 
-    for pred_pose, gt_pose, pred_label, gt_label, pred_bbox in zip(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes):
-        #print("pred_pose, gt_pose, pred_bbox: ", pred_pose, gt_pose, pred_bbox)
-        for pred_pose_item, gt_pose_item, pred_label_item, gt_label_item, pred_bbox_item in zip(pred_pose, gt_pose, pred_label, gt_label, pred_bbox):
+    for pred_pose, gt_pose, pred_label, gt_label, pred_bbox, gt_bbox in zip(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, gt_bboxes):
+        # this is hacky, allows one gt_bbox to correspond to multiple predicted bboxes - does not really matter due to high detection accuracy, but ideally fix later
+        correspondences = {}
+        for pred_bbox_item in pred_bbox:
+            best_iou = 0.0
+            for gt_bbox_item in gt_bbox:
+                iou = bbox_iou(pred_bbox_item, gt_bbox_item)
+                if iou > best_iou:
+                    best_iou = iou
+                    correspondences[pred_bbox.index(pred_bbox_item)] = gt_bbox.index(gt_bbox_item)
+        
+        print("correspondences: ", correspondences)
+
+        for pred_index, gt_index in correspondences:
+            pred_pose_item = pred_pose[pred_index]
+            gt_pose_item = gt_pose[gt_index]
+            pred_label_item = pred_label[pred_index]
+            gt_label_item = gt_label[gt_index]
+
             pred_r, pred_t = pt.recover_6d_pose(pred_pose_item, pred_bbox_item, pose_mean, pose_std)
             gt_r, gt_t = gt_pose_item[0:3, :], gt_pose_item[3, :]
+
             if pred_label_item == gt_label_item and gt_label_item != 0:
-                print("pred_r, gt_r, pred_t, gt_t: ", pred_r, gt_r, pred_t, gt_t)
-                error += pose_error.add_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item], diameters[gt_label_item])
-                counter += 1.0
+                counts[gt_label_item -1] += 1.0
+                error = pose_error.add_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item], diameters[gt_label_item])
+                ap[gt_label_item -1] += error
+
+    return np.divide(ap, counts)
+
+        #print("pred_pose, gt_pose, pred_bbox: ", pred_pose, gt_pose, pred_bbox)
+        # for pred_pose_item, gt_pose_item, pred_label_item, gt_label_item, pred_bbox_item in zip(pred_pose, gt_pose, pred_label, gt_label, pred_bbox):
+        #     pred_r, pred_t = pt.recover_6d_pose(pred_pose_item, pred_bbox_item, pose_mean, pose_std)
+        #     gt_r, gt_t = gt_pose_item[0:3, :], gt_pose_item[3, :]
+        #     if pred_label_item == gt_label_item and gt_label_item != 0:
+        #         print("pred_r, gt_r, pred_t, gt_t: ", pred_r, gt_r, pred_t, gt_t)
+        #         error += pose_error.add_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item], diameters[gt_label_item])
+        #         counter += 1.0
     
-    return error/counter
+    #return error/counter

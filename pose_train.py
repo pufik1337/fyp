@@ -124,8 +124,8 @@ def train(**kwargs):
         print("Epoch %d evaluation result : ", epoch)
         print(eval_result)
 
-        if eval_result['pose_error'] > best_map:
-            best_map = eval_result['pose_error']
+        if eval_result['mean_pose_add'] > best_map:
+            best_map = eval_result['mean_pose_add']
             best_path = trainer.save(best_map=best_map)
         if epoch == 9:
             trainer.load(best_path)
@@ -133,7 +133,7 @@ def train(**kwargs):
             lr_ = lr_ * opt.lr_decay
 
         trainer.vis.plot('test_map', eval_result['map'])
-        trainer.vis.plot('test_pose_add', eval_result['pose_error'])
+        trainer.vis.plot('test_pose_add', eval_result['mean_pose_add'])
         log_info = 'lr:{}, map:{},loss:{}'.format(str(lr_),
                                                   str(eval_result['map']),
                                                   str(trainer.get_meter_data()))

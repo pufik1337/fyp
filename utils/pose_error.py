@@ -30,8 +30,10 @@ def add(R_est, t_est, R_gt, t_gt, model):
 def add_metric(R_est, t_est, R_gt, t_gt, model, diameter):
     avg_dist = add(R_est, t_est, R_gt, t_gt, model)
 
-    print("average dist:", avg_dist)
-    print("diameter of the model: ", diameter)
+    diameters = {1:125.64433088293319, 2:136.6157742173282, 3:235.60199312418814, 4:220.63983688128488, 5:254.5407041137429, 6:188.56383670982623}
+
+    #print("average dist:", avg_dist)
+    #print("diameter of the model: ", diameter)
 
     if avg_dist <= 0.1*diameter:
         return 1.0

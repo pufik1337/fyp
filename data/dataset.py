@@ -120,6 +120,7 @@ class TestDataset:
     def __init__(self, opt, split='test', use_difficult=True):
         self.opt = opt
         self.db = TejaniBboxDataset(opt.tejani_test_dir, split=split, use_difficult=use_difficult)
+        self.pose_mean, self.pose_stddev = self.db.pose_mean, self.db.pose_stddev
         #self.db = VOCBboxDataset(opt.voc_data_dir, split=split, use_difficult=use_difficult)
         #self.tsf = Transform(opt.min_size, opt.max_size)
 
