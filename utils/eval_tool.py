@@ -334,7 +334,7 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
         # set -1 if there is no matching ground truth
         gt_index[iou.max(axis=1) < iou_thresh] = -1
 
-        print("gt_index: ", gt_index)
+        #print("gt_index: ", gt_index)
 
         # for pred_bbox_item in pred_bbox:
         #     best_iou = 0.0
@@ -357,13 +357,16 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
 
                 pred_r, pred_t = pt.recover_6d_pose(pred_pose_item, pred_bbox_item, pose_mean, pose_std)
                 gt_r, gt_t = gt_pose_item[0:3, :], gt_pose_item[3, :]
-
-                if pred_label_item == gt_label_item and gt_label_item != 0:
-                    counts[gt_label_item -1] += 1.0
-                    error = pose_error.add_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item], diameters[gt_label_item])
-                    ap[gt_label_item -1] += error
+                #print("pred_label_item, gt_label_item: ", pred_label_item, gt_label_item)
+                if pred_label_item == gt_label_item:
+                    counts[gt_label_item] += 1.0
+                    error = pose_error.add_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item + 1], diameters[gt_label_item + 1])
+                    ap[gt_label_item] += error
 
             pred_idx += 1
+
+    print("ap: ", ap)
+    print("counts: ", counts)    
 
     return np.divide(ap, counts)
 

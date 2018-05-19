@@ -16,16 +16,16 @@ class Config:
     test_num_workers = 8
 
     # sigma for l1_smooth_loss
-    rpn_sigma = 3.
-    roi_sigma = 1.
+    rpn_sigma = 3.0
+    roi_sigma = 1.0
 
-    pose_sigma = 8
+    pose_sigma = 6.0
 
     # param for optimizer
     # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
     weight_decay = 0.0005
     lr_decay = 0.1  # 1e-3 -> 1e-4
-    lr = 1e-5
+    lr = 1e-3
 
 
     # visualization
