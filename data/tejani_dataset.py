@@ -178,9 +178,22 @@ class TejaniBboxDataset:
             label = np.stack(label).astype(np.int32)
             # When `use_difficult==False`, all elements in `difficult` are False.
             difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
-                    
-            img_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), mode,  str(id_).zfill(4) + '.jpg')
-            img = read_image(img_file, color=True)
+            if mode == 'rgb':
+                img_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), mode,  str(id_).zfill(4) + '.jpg')
+                img = read_image(img_file, color=True)
+            elif mode == 'depth':
+                img_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), mode,  str(id_).zfill(4) + '.png')
+                img = read_image(img_file, color=False)
+            elif mode == 'rgbd':
+                color_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), 'rgb',  str(id_).zfill(4) + '.jpg')
+                color_img = read_image(color_file, color=True)
+                depth_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), 'depth',  str(id_).zfill(4) + '.png')
+                depth_img = read_image(depth_file, color=False)
+                depth_img = np.vstack((depth_img, depth_img, depth_img))
+                img = color_img, depth_img
+            else:
+                raise ValueError("Invalid Dataset Wrapper Mode: {}; must be one of (rgb, depth, rgbd)".format(mode))
+
             return img, bbox, pose, label, difficult
             
                     
@@ -251,11 +264,11 @@ for i in range(len(SEQ_COUNTS)):
 
 #pose_sum = np.empty([1, 4])
 
-#for i in range(1):
-#     #     for j in range(4):
-#     #         if math.isnan(example[j]):
-#     #             print("NaN found in example ", i)
-#     print("Example  ", i, " :", dummyTD.get_example(i, normalize=True)[2])
+#for i in range(len(dummyTD)):
+    #     for j in range(4):
+    #         if math.isnan(example[j]):
+    #             print("NaN found in example ", i)
+    #print("Example  ", i, " :", dummyTD.get_example(i, normalize=True, mode='rgbd')[0][0].shape)
      #pose_sum = np.vstack((dummyTD.get_example(i)[2], pose_sum))
      #ex = dummyTD.get_example(i, normalize =True)[2][0]
      #transformed = recover_6d_pose(ex, dummyTD.get_example(i)[1][0], dummyTD.pose_mean, dummyTD.pose_stddev)
