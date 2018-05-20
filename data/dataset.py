@@ -105,7 +105,7 @@ class Dataset:
         self.pose_mean, self.pose_stddev = self.db.pose_mean, self.db.pose_stddev
 
     def __getitem__(self, idx):
-        ori_img, bbox, pose, label, difficult = self.db.get_example(idx, normalize=True)
+        ori_img, bbox, pose, label, difficult = self.db.get_example(idx, normalize=True, mode=opt.tejani_data_mode)
 
         img, bbox, label, scale = self.tsf((ori_img, bbox, label))
         # TODO: check whose stride is negative to fix this instead copy all
@@ -125,7 +125,7 @@ class TestDataset:
         #self.tsf = Transform(opt.min_size, opt.max_size)
 
     def __getitem__(self, idx):
-        ori_img, bbox, pose, label, difficult = self.db.get_example(idx, train=False)
+        ori_img, bbox, pose, label, difficult = self.db.get_example(idx, train=False, mode=opt.tejani_data_mode)
         img = preprocess(ori_img)
         #img, bbox, label, scale = self.tsf((ori_img, bbox, label))
         return img, ori_img.shape[1:], bbox, pose, label, difficult

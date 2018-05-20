@@ -86,8 +86,8 @@ def train(**kwargs):
             #print("inside enumerate")
             scale = at.scalar(scale)
             #print("pose :", pose_)
-            img, bbox, pose, label = img.cuda().float(), bbox_.cuda(), pose_.cuda(), label_.cuda()
-            img, bbox, pose, label = Variable(img), Variable(bbox), Variable(pose), Variable(label)
+            color_img, depth_img, bbox, pose, label = img[0].cuda().float(), img[1].cuda().float(), bbox_.cuda(), pose_.cuda(), label_.cuda()
+            color_img, depth_img, bbox, pose, label = Variable(color_img), Variable(depth_img), Variable(bbox), Variable(pose), Variable(label)
             trainer.train_step(img, bbox, pose, label, scale)
             
             if (ii + 1) % opt.plot_every == 0:

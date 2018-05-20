@@ -10,6 +10,8 @@ class Config:
     voc_data_dir = '/home/ubuntu/fyp/VOCdevkit/VOC2007'
     tejani_data_dir = '/home/ubuntu/fyp/test'
     tejani_test_dir = '/home/ubuntu/fyp/test'
+    tejani_data_mode = 'rgbd'
+
     min_size = 600  # image resize
     max_size = 1000 # image resize
     num_workers = 8
