@@ -106,7 +106,7 @@ class TejaniBboxDataset:
     def __len__(self):
         return len(self.ids)
 
-    def get_example(self, i, mode='rgb', train=True, normalize=False):
+    def get_example(self, i, mode='depth', train=True, normalize=False):
         """Returns the i-th example.
 
         Returns a color image and bounding boxes. The image is in CHW format.
@@ -184,6 +184,7 @@ class TejaniBboxDataset:
             elif mode == 'depth':
                 img_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), mode,  str(id_).zfill(4) + '.png')
                 img = load_depth2(img_file)
+                img = np.stack((img, img, img))
             elif mode == 'rgbd':
                 color_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), 'rgb',  str(id_).zfill(4) + '.jpg')
                 color_img = read_image(color_file, color=True)
