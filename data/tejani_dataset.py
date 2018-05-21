@@ -6,7 +6,7 @@ import math
 
 import numpy as np
 
-from util import read_image
+from .util import read_image, load_depth2
 
 
 class TejaniBboxDataset:
@@ -183,13 +183,13 @@ class TejaniBboxDataset:
                 img = read_image(img_file, color=True)
             elif mode == 'depth':
                 img_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), mode,  str(id_).zfill(4) + '.png')
-                img = read_image(img_file, color=False)
+                img = load_depth2(img_file)
             elif mode == 'rgbd':
                 color_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), 'rgb',  str(id_).zfill(4) + '.jpg')
                 color_img = read_image(color_file, color=True)
                 depth_file = os.path.join(self.data_dir, str(classId + 1).zfill(2), 'depth',  str(id_).zfill(4) + '.png')
-                depth_img = read_image(depth_file, color=False)
-                depth_img = np.vstack((depth_img, depth_img, depth_img))
+                depth_img = load_depth2(depth_file)
+                depth_img = np.stack((depth_img, depth_img, depth_img))
                 img = color_img, depth_img
             else:
                 raise ValueError("Invalid Dataset Wrapper Mode: {}; must be one of (rgb, depth, rgbd)".format(mode))
@@ -260,15 +260,18 @@ for i in range(len(SEQ_COUNTS)):
 #print(TEST_IDS[0])
 #print(TRAINVAL_IDS[0])
 
-dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='test')
-
+#dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='test')
+#totalmax = 0.0
 #pose_sum = np.empty([1, 4])
 
-for i in range(len(dummyTD)):
+#for i in range(len(dummyTD)):
     #     for j in range(4):
     #         if math.isnan(example[j]):
     #             print("NaN found in example ", i)
-    print("Example  ", i, " :", dummyTD.get_example(i, normalize=True, mode='rgbd')[0][0].shape)
+ #   thismax = np.max(dummyTD.get_example(i, normalize=True, mode='rgbd')[0][1])
+  #  if thismax > totalmax:
+   #     totalmax = thismax
+    #print("Example  ", i, " :", dummyTD.get_example(i, normalize=True, mode='rgbd')[0][1].shape)
      #pose_sum = np.vstack((dummyTD.get_example(i)[2], pose_sum))
      #ex = dummyTD.get_example(i, normalize =True)[2][0]
      #transformed = recover_6d_pose(ex, dummyTD.get_example(i)[1][0], dummyTD.pose_mean, dummyTD.pose_stddev)
@@ -277,7 +280,7 @@ for i in range(len(dummyTD)):
 #     print("posevec: ", posevec)
 #     pose = recover_6d_pose(posevec, dummyTD.get_example(i)[1][0])
 #     print("Recovered pose:  ", i, " : \n", pose)
-
+#print("totalmax: ", totalmax)
 #print("pose sum: ", pose_sum, pose_sum.shape)
 #pose_mean = np.mean(pose_sum, axis=0)
 #pose_stddev = np.std(pose_sum, axis=0)
