@@ -1,7 +1,10 @@
 import numpy as np
 from PIL import Image
 import random
-
+import png
+import scipy.misc
+import itertools
+itertools.imap = lambda *args, **kwargs: list(map(*args, **kwargs))
 
 def read_image(path, dtype=np.float32, color=True):
     """Read an image from a file.
@@ -40,6 +43,16 @@ def read_image(path, dtype=np.float32, color=True):
         # transpose (H, W, C) -> (C, H, W)
         return img.transpose((2, 0, 1))
 
+def load_depth(path):
+    # PyPNG library is used since it allows to save 16-bit PNG
+    r = png.Reader(filename=path)
+    im = np.vstack(itertools.imap(np.uint16, r.asDirect()[2])).astype(np.float32)*(255.0/5984.0)
+    return im
+
+def load_depth2(path):
+    d = scipy.misc.imread(path)
+    d = d.astype(np.float32)*(255.0/5984.0)
+    return d
 
 def resize_bbox(bbox, in_size, out_size):
     """Resize bounding boxes according to image resize.
