@@ -47,6 +47,7 @@ class FasterRCNNPoseTrainer(nn.Module):
         self.rpn_sigma = opt.rpn_sigma
         self.roi_sigma = opt.roi_sigma
         self.pose_sigma = opt.pose_sigma
+        #self.pose_beta = opt.pose_beta
 
         # target creator create gt_bbox gt_label etc as training targets. 
         self.anchor_target_creator = AnchorTargetCreator()
@@ -64,8 +65,8 @@ class FasterRCNNPoseTrainer(nn.Module):
         self.roi_cm = ConfusionMeter(7)
         self.meters = {k: AverageValueMeter() for k in LossTuple._fields}  # average loss
 
-    def forward(self, imgs, bboxes, poses, labels, scale):
-        """Forward Faster R-CNN and calculate losses. - OVERRIDES NETHOD IN FASTER RCNN? (check by printing)
+    def forward(self, rgb_imgs, depth_imgs, bboxes, poses, labels, scale):
+        """Forward Faster R-CNN and calculate losses. 
 
         Here are notations used.
 
@@ -93,11 +94,16 @@ class FasterRCNNPoseTrainer(nn.Module):
         if n != 1:
             raise ValueError('Currently only batch size 1 is supported.')
 
-        _, _, H, W = imgs.shape
+        _, _, H, W = rgb_imgs.shape
         img_size = (H, W)
 
         # forward through feature extraction CNN
-        features = self.faster_rcnn.extractor(imgs)
+        color_features = self.faster_rcnn.color_extractor(rgb_imgs)
+        depth_features = self.faster_rcnn.depth_extractor(depth_imgs)
+
+        stacked_features = t.stack(color_features, depth_features)
+
+        features = self.faster_rcnn.merge(stacked_features)
 
         # forward features through RPN to get proposals
         rpn_locs, rpn_scores, rois, roi_indices, anchor = \
@@ -187,9 +193,9 @@ class FasterRCNNPoseTrainer(nn.Module):
         #print("losses: ", losses)
         return LossTuple(*losses)
 
-    def train_step(self, imgs, bboxes, poses, labels, scale):
+    def train_step(self, rgb_imgs, depth_imgs, bboxes, poses, labels, scale):
         self.optimizer.zero_grad()
-        losses = self.forward(imgs, bboxes, poses, labels, scale)
+        losses = self.forward(rgb_imgs, depth_imgs, bboxes, poses, labels, scale)
         losses.total_loss.backward()
         self.optimizer.step()
         self.update_meters(losses)
@@ -265,6 +271,15 @@ def _smooth_l1_loss(x, t, in_weight, sigma):
          (1 - flag) * (abs_diff - 0.5 / sigma2))
     return y.sum()
 
+def _smooth_l1_pose_loss(x, t, in_weight, sigma, beta):
+    sigma2 = sigma ** 2
+    diff = in_weight * (x - t)
+    abs_diff = diff.abs()
+    flag = (abs_diff.data < (1. / sigma2)).float()
+    flag = Variable(flag)
+    y = (flag * (sigma2 / 2.) * (diff ** 2) +
+         (1 - flag) * (abs_diff - 0.5 / sigma2))
+    return y.sum()
 
 def _fast_rcnn_loc_loss(pred_loc, gt_loc, gt_label, sigma):
     in_weight = t.zeros(gt_loc.shape).cuda()

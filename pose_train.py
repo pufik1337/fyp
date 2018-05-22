@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from utils.config import opt
 from data.dataset import Dataset, TestDataset, inverse_normalize
-from model import Deep6DRCNNVGG16
+from model import Deep6DRCNNVGG16_RGBD
 from torch.autograd import Variable
 from torch.utils import data as data_
 from pose_trainer import FasterRCNNPoseTrainer
@@ -30,7 +30,7 @@ def eval(dataloader, faster_rcnn, pose_mean, pose_stddev, test_num=10000):
     gt_bboxes, gt_poses, gt_labels, gt_difficults = list(), list(), list(), list()
     for ii, (imgs, sizes, gt_bboxes_, gt_poses_, gt_labels_, gt_difficults_) in tqdm(enumerate(dataloader)):
         sizes = [sizes[0][0], sizes[1][0]]
-        pred_bboxes_, pred_poses_, pred_labels_, pred_scores_ = faster_rcnn.predict(imgs, [sizes])
+        pred_bboxes_, pred_poses_, pred_labels_, pred_scores_ = faster_rcnn.predict(imgs[0], imgs[1], [sizes])
         gt_bboxes += list(gt_bboxes_.numpy())
         gt_poses += list(gt_poses_.numpy())
         gt_labels += list(gt_labels_.numpy())
@@ -68,7 +68,7 @@ def train(**kwargs):
                                        shuffle=False, \
                                        pin_memory=True
                                        )
-    faster_rcnn = Deep6DRCNNVGG16(n_fg_class=6)
+    faster_rcnn = Deep6DRCNNVGG16_RGBD(n_fg_class=6)
     print('model construct completed')
     trainer = FasterRCNNPoseTrainer(faster_rcnn).cuda()
     if opt.load_path:
@@ -88,7 +88,7 @@ def train(**kwargs):
             #print("pose :", pose_)
             color_img, depth_img, bbox, pose, label = img[0].cuda().float(), img[1].cuda().float(), bbox_.cuda(), pose_.cuda(), label_.cuda()
             color_img, depth_img, bbox, pose, label = Variable(color_img), Variable(depth_img), Variable(bbox), Variable(pose), Variable(label)
-            trainer.train_step(img, bbox, pose, label, scale)
+            trainer.train_step(color_img, depth_img, bbox, pose, label, scale)
             
             if (ii + 1) % opt.plot_every == 0:
                 if os.path.exists(opt.debug_file):
@@ -98,19 +98,21 @@ def train(**kwargs):
                 trainer.vis.plot_many(trainer.get_meter_data())
 
                 # plot groud truth bboxes
-                ori_img_ = inverse_normalize(at.tonumpy(img[0]))
-                gt_img = visdom_bbox(ori_img_,
+                ori_img_rgb_ = inverse_normalize(at.tonumpy(color_img[0]))
+                ori_img_depth_ = inverse_normalize(at.tonumpy(depth_img[0]))
+                gt_img_rgb = visdom_bbox(ori_img_rgb_,
                                      at.tonumpy(bbox_[0]),
                                      at.tonumpy(label_[0]))
-                trainer.vis.img('gt_img', gt_img)
+                trainer.vis.img('gt_img', gt_img_rgb)
+                trainer.vis.img('gt_img_depth', ori_img_depth_)
 
                 # plot predicti bboxes
-                _bboxes, _poses, _labels, _scores = trainer.faster_rcnn.predict([ori_img_], visualize=True)
+                _bboxes, _poses, _labels, _scores = trainer.faster_rcnn.predict([ori_img_rgb_], [ori_img_depth_], visualize=True)
                 print("Predicted : \n")
                 print(_poses)
                 print("Ground truth : \n")
                 print(pose)
-                pred_img = visdom_bbox(ori_img_,
+                pred_img = visdom_bbox(ori_img_rgb_,
                                        at.tonumpy(_bboxes[0]),
                                        at.tonumpy(_labels[0]).reshape(-1),
                                        at.tonumpy(_scores[0]))
