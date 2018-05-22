@@ -100,9 +100,10 @@ class FasterRCNNPoseTrainer(nn.Module):
         # forward through feature extraction CNN
         color_features = self.faster_rcnn.color_extractor(rgb_imgs)
         depth_features = self.faster_rcnn.depth_extractor(depth_imgs)
-
-        stacked_features = t.stack(color_features, depth_features)
-
+        #print("color features: ", color_features)
+        #print("depth features: ", depth_features)
+        stacked_features = t.cat((color_features, depth_features), dim=1)
+        #print("stacked features: ", stacked_features)
         features = self.faster_rcnn.merge(stacked_features)
 
         # forward features through RPN to get proposals

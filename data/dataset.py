@@ -105,12 +105,13 @@ class Dataset:
         self.pose_mean, self.pose_stddev = self.db.pose_mean, self.db.pose_stddev
 
     def __getitem__(self, idx):
-        ori_img, bbox, pose, label, difficult = self.db.get_example(idx, normalize=True, mode=opt.tejani_data_mode)
+        img_tuple, bbox, pose, label, difficult = self.db.get_example(idx, normalize=True, mode=opt.tejani_data_mode)
 
-        img, bbox, label, scale = self.tsf((ori_img, bbox, label))
+        rgb_img, bbox, label, scale = self.tsf((img_tuple[0], bbox, label))
+        depth_img, _, _, _ = self.tsf((img_tuple[1], bbox, label))
         # TODO: check whose stride is negative to fix this instead copy all
         # some of the strides of a given numpy array are negative.
-        return img.copy(), bbox.copy(), pose.copy(), label.copy(), scale
+        return rgb_img.copy(), depth_img.copy(), bbox.copy(), pose.copy(), label.copy(), scale
 
     def __len__(self):
         return len(self.db)
@@ -125,10 +126,11 @@ class TestDataset:
         #self.tsf = Transform(opt.min_size, opt.max_size)
 
     def __getitem__(self, idx):
-        ori_img, bbox, pose, label, difficult = self.db.get_example(idx, train=False, mode=opt.tejani_data_mode)
-        img = preprocess(ori_img)
+        ori_img_tuple, bbox, pose, label, difficult = self.db.get_example(idx, train=False, mode=opt.tejani_data_mode)
+        rgb_img = preprocess(ori_img_tuple[0])
+        depth_img = preprocess(ori_img_tuple[1])
         #img, bbox, label, scale = self.tsf((ori_img, bbox, label))
-        return img, ori_img.shape[1:], bbox, pose, label, difficult
+        return rgb_img, depth_img, ori_img.shape[1:], bbox, pose, label, difficult
         #return img.copy(), ori_img.shape[1:], bbox.copy(), label.copy(), difficult
 
     def __len__(self):

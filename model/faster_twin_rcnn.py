@@ -127,14 +127,14 @@ class FasterTwinRCNN(nn.Module):
         h_rgb = self.color_extractor(x_rgb)
         h_depth = self.depth_extractor(x_depth)
 
-        h_stack = t.stack(h_rgb, h_depth)
+        h_stack = t.cat((h_rgb, h_depth), dim=1)
         h = self.merge(h_stack)
         
         rpn_locs, rpn_scores, rois, roi_indices, anchor = \
             self.rpn(h, img_size, scale)
-        roi_cls_locs, roi_scores = self.head(
+        roi_cls_locs, roi_scores, roi_poses = self.head(
             h, rois, roi_indices)
-        return roi_cls_locs, roi_scores, rois, roi_indices
+        return roi_cls_locs, roi_scores, roi_poses, rois, roi_indices
 
     def use_preset(self, preset):
         """Use the given preset during prediction.
