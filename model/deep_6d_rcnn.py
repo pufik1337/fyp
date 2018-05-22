@@ -2,7 +2,7 @@ import torch as t
 from torch import nn
 from torchvision.models import vgg16
 from model.region_proposal_network import RegionProposalNetwork
-from model.faster_rcnn import FasterRCNN
+from model.faster_twin_rcnn import FasterTwinRCNN
 from model.roi_module import RoIPooling2D
 from utils import array_tool as at
 from utils.config import opt
@@ -34,7 +34,7 @@ def decom_vgg16():
 
     return nn.Sequential(*features), classifier
 
-class Deep6DRCNNVGG16_RGBD(FasterRCNN):
+class Deep6DRCNNVGG16_RGBD(FasterTwinRCNN):
     """Deep 6D R-CNN based on VGG-16.
     For descriptions on the interface of this model, please refer to
     :class:`model.faster_rcnn.FasterRCNN`.
@@ -76,56 +76,57 @@ class Deep6DRCNNVGG16_RGBD(FasterRCNN):
         )
 
         super(Deep6DRCNNVGG16_RGBD, self).__init__(
-            extractor,
+            color_extractor,
+            depth_extractor,
             rpn,
             head,
         )
 
-class Deep6DRCNNVGG16(FasterRCNN):
-    """Deep 6D R-CNN based on VGG-16.
-    For descriptions on the interface of this model, please refer to
-    :class:`model.faster_rcnn.FasterRCNN`.
+# class Deep6DRCNNVGG16(FasterRCNN):
+#     """Deep 6D R-CNN based on VGG-16.
+#     For descriptions on the interface of this model, please refer to
+#     :class:`model.faster_rcnn.FasterRCNN`.
 
-    Args:
-        n_fg_class (int): The number of classes excluding the background.
-        ratios (list of floats): This is ratios of width to height of
-            the anchors.
-        anchor_scales (list of numbers): This is areas of anchors.
-            Those areas will be the product of the square of an element in
-            :obj:`anchor_scales` and the original area of the reference
-            window.
+#     Args:
+#         n_fg_class (int): The number of classes excluding the background.
+#         ratios (list of floats): This is ratios of width to height of
+#             the anchors.
+#         anchor_scales (list of numbers): This is areas of anchors.
+#             Those areas will be the product of the square of an element in
+#             :obj:`anchor_scales` and the original area of the reference
+#             window.
 
-    """
+#     """
 
-    feat_stride = 16  # downsample 16x for output of conv5 in vgg16
+#     feat_stride = 16  # downsample 16x for output of conv5 in vgg16
 
-    def __init__(self,
-                 n_fg_class=20,
-                 ratios=[0.5, 1, 2],
-                 anchor_scales=[8, 16, 32]
-                 ):
+#     def __init__(self,
+#                  n_fg_class=20,
+#                  ratios=[0.5, 1, 2],
+#                  anchor_scales=[8, 16, 32]
+#                  ):
                  
-        extractor, classifier = decom_vgg16()
+#         extractor, classifier = decom_vgg16()
 
-        rpn = RegionProposalNetwork(
-            512, 512,
-            ratios=ratios,
-            anchor_scales=anchor_scales,
-            feat_stride=self.feat_stride,
-        )
+#         rpn = RegionProposalNetwork(
+#             512, 512,
+#             ratios=ratios,
+#             anchor_scales=anchor_scales,
+#             feat_stride=self.feat_stride,
+#         )
 
-        head = VGG16PoseHead(
-            n_class=n_fg_class + 1,
-            roi_size=7,
-            spatial_scale=(1. / self.feat_stride),
-            classifier=classifier
-        )
+#         head = VGG16PoseHead(
+#             n_class=n_fg_class + 1,
+#             roi_size=7,
+#             spatial_scale=(1. / self.feat_stride),
+#             classifier=classifier
+#         )
 
-        super(Deep6DRCNNVGG16, self).__init__(
-            extractor,
-            rpn,
-            head,
-        )
+#         super(Deep6DRCNNVGG16, self).__init__(
+#             extractor,
+#             rpn,
+#             head,
+#         )
 
 
 class VGG16RoIHead(nn.Module):
