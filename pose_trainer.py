@@ -296,18 +296,19 @@ def _fast_rcnn_loc_loss(pred_loc, gt_loc, gt_label, sigma):
 
 def _pose_loss(pred_pose, gt_pose, gt_label, sigma, beta):
     in_weight = t.zeros(gt_pose.shape).cuda()
+    in_weight = Variable(in_weight)
     # Localization loss is calculated only for positive rois.
     # NOTE:  unlike origin implementation, 
     # we don't need inside_weight and outside_weight, they can calculate by gt_label
     in_weight[(gt_label > 0).view(-1, 1).expand_as(in_weight).cuda()] = 1
     #pose_loss = _smooth_l1_loss(pred_pose, gt_pose, Variable(in_weight), sigma)
-    pred_rot = pred_pose[:, 0:2]
-    gt_rot = gt_pose[:, 0:2]
-    pred_depth = pred_pose[:, 3]
-    gt_depth = gt_pose[:, 3]
+    pred_rot = t.mul(pred_pose[:, 0:3], in_weight[:, 0:3])
+    gt_rot = t.mul(gt_pose[:, 0:3], in_weight[:, 0:3])
+    pred_depth = t.mul(pred_pose[:, 3], in_weight[:, 3])
+    gt_depth = t.mul(gt_pose[:, 3], in_weight[:, 3])
 
-    rot_loss = nn.L1Loss(t.mul(pred_rot, in_weight), t.mul(gt_rot, in_weight))
-    depth_loss = nn.L1Loss(t.mul(pred_depth, in_weight), t.mul(gt_depth, in_weight))
+    rot_loss = nn.L1Loss(pred_rot, gt_rot)
+    depth_loss = nn.L1Loss(pred_depth, gt_depth)
 
     pose_loss = rot_loss + beta*depth_loss
 
