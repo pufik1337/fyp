@@ -21,13 +21,16 @@ class Config:
     rpn_sigma = 3.0
     roi_sigma = 1.0
 
-    pose_sigma = 50.0
+    loc_alpha = 1.0
+    pose_alpha = 2.0
+
+    pose_beta = 1.5
 
     # param for optimizer
     # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
     weight_decay = 0.0005
     lr_decay = 0.1  # 1e-3 -> 1e-4
-    lr = 2e-5
+    lr = 1e-3
 
 
     # visualization

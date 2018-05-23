@@ -46,8 +46,9 @@ class FasterRCNNPoseTrainer(nn.Module):
         self.faster_rcnn = faster_rcnn
         self.rpn_sigma = opt.rpn_sigma
         self.roi_sigma = opt.roi_sigma
-        self.pose_sigma = opt.pose_sigma
-        #self.pose_beta = opt.pose_beta
+        self.pose_beta = opt.pose_beta
+        self.loc_alpha = opt.loc_alpha
+        self.pose_alpha = opt.pose_alpha
 
         # target creator create gt_bbox gt_label etc as training targets. 
         self.anchor_target_creator = AnchorTargetCreator()
@@ -180,14 +181,14 @@ class FasterRCNNPoseTrainer(nn.Module):
 
         roi_cls_loss = nn.CrossEntropyLoss()(roi_score, gt_roi_label.cuda())
 
-        roi_pose_loss = _pose_loss(roi_pose.contiguous(), gt_roi_pose, gt_roi_label.data, self.pose_sigma)
+        roi_pose_loss = _pose_loss(roi_pose.contiguous(), gt_roi_pose, gt_roi_label.data, self.pose_sigma, self.pose_beta)
         #print("Predicted Pose: ", roi_pose.contiguous())
         #print("Ground Truth Pose: ", gt_roi_pose)
         #print("ROI Pose loss: ", roi_pose_loss)
 
         self.roi_cm.add(at.totensor(roi_score, False), gt_roi_label.data.long())
 
-        losses = [rpn_loc_loss, rpn_cls_loss, roi_loc_loss, roi_cls_loss, roi_pose_loss]
+        losses = [self.loc_alpha*rpn_loc_loss, self.loc_alpha*rpn_cls_loss, self.loc_alpha*roi_loc_loss, self.loc_alpha*roi_cls_loss, self.pose_alpha*roi_pose_loss]
         #losses = [rpn_loc_loss, rpn_cls_loss, roi_loc_loss, roi_cls_loss, 0*roi_pose_loss]
         
         losses = losses + [sum(losses)]
@@ -293,13 +294,23 @@ def _fast_rcnn_loc_loss(pred_loc, gt_loc, gt_label, sigma):
     loc_loss /= (gt_label >= 0).sum()  # ignore gt_label==-1 for rpn_loss
     return loc_loss
 
-def _pose_loss(pred_pose, gt_pose, gt_label, sigma):
+def _pose_loss(pred_pose, gt_pose, gt_label, sigma, beta):
     in_weight = t.zeros(gt_pose.shape).cuda()
     # Localization loss is calculated only for positive rois.
     # NOTE:  unlike origin implementation, 
     # we don't need inside_weight and outside_weight, they can calculate by gt_label
     in_weight[(gt_label > 0).view(-1, 1).expand_as(in_weight).cuda()] = 1
-    pose_loss = _smooth_l1_loss(pred_pose, gt_pose, Variable(in_weight), sigma)
+    #pose_loss = _smooth_l1_loss(pred_pose, gt_pose, Variable(in_weight), sigma)
+    pred_rot = pred_pose[:, 0:2]
+    gt_rot = gt_pose[:, 0:2]
+    pred_depth = pred_pose[:, 3]
+    gt_depth = gt_pose[:, 3]
+
+    rot_loss = nn.L1Loss(t.mul(pred_rot, in_weight), t.mul(gt_rot, in_weight))
+    depth_loss = nn.L1Loss(t.mul(pred_depth, in_weight), t.mul(gt_depth, in_weight))
+
+    pose_loss = rot_loss + beta*depth_loss
+
     # Normalize by total number of negtive and positive rois.
     pose_loss /= (gt_label >= 0).sum()  # ignore gt_label==-1 for rpn_loss
     return pose_loss
