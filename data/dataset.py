@@ -80,20 +80,23 @@ class Transform(object):
         self.max_size = max_size
 
     def __call__(self, in_data):
-        img, bbox, label = in_data
-        _, H, W = img.shape
-        img = preprocess(img, self.min_size, self.max_size)
-        _, o_H, o_W = img.shape
+        img_tuple, bbox, label = in_data
+        _, H, W = img_tuple[0].shape
+        rgb_img = preprocess(img_tuple[0], self.min_size, self.max_size)
+        depth_img = preprocess(img_tuple[1], self.min_size, self.max_size)
+        _, o_H, o_W = rgb_img.shape
         scale = o_H / H
         bbox = util.resize_bbox(bbox, (H, W), (o_H, o_W))
 
         # horizontally flip
-        img, params = util.random_flip(
-            img, x_random=True, return_param=True)
+        rgb_img, params = util.random_flip(
+            rgb_img, x_random=True, return_param=True)
         bbox = util.flip_bbox(
             bbox, (o_H, o_W), x_flip=params['x_flip'])
-
-        return img, bbox, label, scale
+        if params['x_flip']:
+            depth_img = depth_img[:, :, ::-1]
+ 
+        return rgb_img, depth_img, bbox, label, scale
 
 
 class Dataset:
@@ -107,8 +110,8 @@ class Dataset:
     def __getitem__(self, idx):
         img_tuple, bbox, pose, label, difficult = self.db.get_example(idx, normalize=True, mode=opt.tejani_data_mode)
 
-        rgb_img, bbox, label, scale = self.tsf((img_tuple[0], bbox, label))
-        depth_img, _, _, _ = self.tsf((img_tuple[1], bbox, label))
+        rgb_img, depth_img, bbox, label, scale = self.tsf((img_tuple, bbox, label))
+        #depth_img, _, _, _ = self.tsf((img_tuple[1], bbox, label))
         # TODO: check whose stride is negative to fix this instead copy all
         # some of the strides of a given numpy array are negative.
         return rgb_img.copy(), depth_img.copy(), bbox.copy(), pose.copy(), label.copy(), scale
@@ -130,7 +133,7 @@ class TestDataset:
         rgb_img = preprocess(ori_img_tuple[0])
         depth_img = preprocess(ori_img_tuple[1])
         #img, bbox, label, scale = self.tsf((ori_img, bbox, label))
-        return rgb_img, depth_img, ori_img.shape[1:], bbox, pose, label, difficult
+        return rgb_img, depth_img, ori_img_tuple[0].shape[1:], bbox, pose, label, difficult
         #return img.copy(), ori_img.shape[1:], bbox.copy(), label.copy(), difficult
 
     def __len__(self):
