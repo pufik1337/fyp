@@ -181,7 +181,7 @@ class FasterRCNNPoseTrainer(nn.Module):
 
         roi_cls_loss = nn.CrossEntropyLoss()(roi_score, gt_roi_label.cuda())
 
-        roi_pose_loss = _pose_loss(roi_pose.contiguous(), gt_roi_pose, gt_roi_label.data, self.pose_sigma, self.pose_beta)
+        roi_pose_loss = _pose_loss(roi_pose.contiguous(), gt_roi_pose, gt_roi_label.data, 1.0, self.pose_beta)
         #print("Predicted Pose: ", roi_pose.contiguous())
         #print("Ground Truth Pose: ", gt_roi_pose)
         #print("ROI Pose loss: ", roi_pose_loss)
@@ -307,8 +307,10 @@ def _pose_loss(pred_pose, gt_pose, gt_label, sigma, beta):
     pred_depth = t.mul(pred_pose[:, 3], in_weight[:, 3])
     gt_depth = t.mul(gt_pose[:, 3], in_weight[:, 3])
 
-    rot_loss = nn.L1Loss(pred_rot, gt_rot)
-    depth_loss = nn.L1Loss(pred_depth, gt_depth)
+    loss_func = nn.L1Loss(size_average=False)
+
+    rot_loss = loss_func(pred_rot, gt_rot)
+    depth_loss = loss_func(pred_depth, gt_depth)
 
     pose_loss = rot_loss + beta*depth_loss
 

@@ -69,6 +69,7 @@ def train(**kwargs):
                                        pin_memory=True
                                        )
     faster_rcnn = Deep6DRCNNVGG16_RGBD(n_fg_class=6)
+    print("faster_rcnn: ", faster_rcnn)
     print('model construct completed')
     trainer = FasterRCNNPoseTrainer(faster_rcnn).cuda()
     if opt.load_path:
@@ -127,10 +128,10 @@ def train(**kwargs):
         print("Epoch %d evaluation result : ", epoch)
         print(eval_result)
 
-        if eval_result['mean_pose_add'] > best_map and eval_result['mean_pose_add'] > 0.35:
+        if eval_result['mean_pose_add'] > best_map and eval_result['mean_pose_add'] > 0.01:
             best_map = eval_result['mean_pose_add']
             best_path = trainer.save(best_map=best_map)
-        if epoch == 9:
+        if epoch == 5:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
             lr_ = lr_ * opt.lr_decay
@@ -141,7 +142,7 @@ def train(**kwargs):
                                                   str(eval_result['map']),
                                                   str(trainer.get_meter_data()))
         trainer.vis.log(log_info)
-        if epoch == 13: 
+        if epoch == 15: 
             break
 
 
