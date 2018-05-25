@@ -140,7 +140,7 @@ class FasterRCNNPoseTrainer(nn.Module):
 
 
         # forward through the head to get BB locations and poses       
-        roi_cls_loc, roi_score, roi_pose = self.faster_rcnn.head(
+        roi_cls_loc, roi_score, roi_cls_pose = self.faster_rcnn.head(
             features,
             sample_roi,
             sample_roi_index)
@@ -167,7 +167,10 @@ class FasterRCNNPoseTrainer(nn.Module):
         # ------------------ ROI losses (fast rcnn loss) -------------------#
         n_sample = roi_cls_loc.shape[0]
         roi_cls_loc = roi_cls_loc.view(n_sample, -1, 4)
+        roi_cls_pose = roi_cls_pose.view(n_sample, -1, 4)
         roi_loc = roi_cls_loc[t.arange(0, n_sample).long().cuda(), \
+                              at.totensor(gt_roi_label).long()]
+        roi_pose = roi_cls_pose[t.arange(0, n_sample).long().cuda(), \
                               at.totensor(gt_roi_label).long()]
         gt_roi_label = at.tovariable(gt_roi_label).long()
         gt_roi_loc = at.tovariable(gt_roi_loc)

@@ -349,11 +349,13 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
         for pred_idx in range(iou.shape[0]):
             gt_idx = gt_index[pred_idx]
             if gt_idx >= 0:
-                pred_pose_item = pred_pose[pred_idx]
+                pred_pose_cls_item = pred_pose[pred_idx]
                 gt_pose_item = gt_pose[gt_idx]
                 pred_label_item = pred_label[pred_idx]
                 gt_label_item = gt_label[gt_idx]
                 pred_bbox_item = pred_bbox[pred_idx]
+                pred_pose_cls_item = np.reshape(pred_pose_cls_item, (n_fg_class, 4))
+                pred_pose_item = pred_pose_cls_item[gt_label_item, :]
 
                 pred_r, pred_t = pt.recover_6d_pose(pred_pose_item, pred_bbox_item, pose_mean, pose_std)
                 gt_r, gt_t = gt_pose_item[0:3, :], gt_pose_item[3, :]

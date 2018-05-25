@@ -273,7 +273,7 @@ class FasterTwinRCNN(nn.Module):
             cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0, max=size[1])
 
             prob = at.tonumpy(F.softmax(at.tovariable(roi_score), dim=1))
-
+            print("faster_twin_rcnn; pose:", pose)
             raw_cls_bbox = at.tonumpy(cls_bbox)
             raw_prob = at.tonumpy(prob)
             raw_pose = at.tonumpy(pose)
@@ -289,7 +289,7 @@ class FasterTwinRCNN(nn.Module):
         return bboxes, poses, labels, scores
 
 
-    def get_optimizer(self):
+    def get_optimizer(self):                                                                                                                
         """
         return optimizer, It could be overwriten if you want to specify 
         special optimizer
@@ -302,7 +302,7 @@ class FasterTwinRCNN(nn.Module):
                     params += [{'params': [value], 'lr': lr * 2, 'weight_decay': 0}]
                 else:
                     params += [{'params': [value], 'lr': lr, 'weight_decay': opt.weight_decay}]
-        if opt.use_adam:
+        if opt.use_adam:                                                                                                            
             self.optimizer = t.optim.Adam(params)
         else:
             self.optimizer = t.optim.SGD(params, momentum=0.9)
