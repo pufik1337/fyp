@@ -273,7 +273,7 @@ class FasterTwinRCNN(nn.Module):
             cls_bbox[:, 1::2] = (cls_bbox[:, 1::2]).clamp(min=0, max=size[1])
 
             prob = at.tonumpy(F.softmax(at.tovariable(roi_score), dim=1))
-            print("faster_twin_rcnn; pose:", pose)
+            #print("faster_twin_rcnn; cls_bbox:", cls_bbox)
             raw_cls_bbox = at.tonumpy(cls_bbox)
             raw_prob = at.tonumpy(prob)
             raw_pose = at.tonumpy(pose)

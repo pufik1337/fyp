@@ -2,6 +2,7 @@ import os
 
 import ipdb
 import matplotlib
+import numpy as np
 from tqdm import tqdm
 
 from utils.config import opt
@@ -110,6 +111,13 @@ def train(**kwargs):
 
                 # plot predicti bboxes
                 _bboxes, _poses, _labels, _scores = trainer.faster_rcnn.predict([ori_img_rgb_], [ori_img_depth_], visualize=True)
+                _poses = np.asarray(_poses)
+                select = np.arange(_poses.shape[1])*7 + (1+np.asarray(_labels))
+                _poses = _poses.reshape(_poses.shape[1]*7, 4)
+                #select = np.arange((_poses.shape[1] - 1))*7 + np.asarray(_labels) 
+                #select = np.asarray(_labels)
+                _poses = _poses[select, :]
+                print(_labels, select)
                 print("Predicted : \n")
                 print(_poses)
                 print("Ground truth : \n")
@@ -131,7 +139,7 @@ def train(**kwargs):
         if eval_result['mean_pose_add'] > best_map and eval_result['mean_pose_add'] > 0.01:
             best_map = eval_result['mean_pose_add']
             best_path = trainer.save(best_map=best_map)
-        if epoch == 5:
+        if epoch == 7 or epoch == 23:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
             lr_ = lr_ * opt.lr_decay
