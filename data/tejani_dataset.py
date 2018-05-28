@@ -106,7 +106,7 @@ class TejaniBboxDataset:
     def __len__(self):
         return len(self.ids)
 
-    def get_example(self, i, mode='depth', train=True, normalize=False):
+    def get_example(self, i, mode='rgb', train=True, normalize=False):
         """Returns the i-th example.
 
         Returns a color image and bounding boxes. The image is in CHW format.

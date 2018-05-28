@@ -170,8 +170,8 @@ class VGG16PoseHead(nn.Module):
         self.cls_loc = nn.Linear(4096, n_class * 4)
         self.score = nn.Linear(4096, n_class)
         self.pose_fc1 = nn.Linear(4096, 4096)
-        self.pose_fc2 = nn.Linear(4096, 384)
-        self.pose_reg = nn.Linear(384, 4)
+        self.pose_fc2 = nn.Linear(4096, 2048)
+        self.pose_reg = nn.Linear(2048, 4)
 
         normal_init(self.cls_loc, 0, 0.001)
         normal_init(self.score, 0, 0.01)
