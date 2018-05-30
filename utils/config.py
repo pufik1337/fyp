@@ -49,6 +49,7 @@ class Config:
     debug_file = '/tmp/debugf'
 
     test_num = 10000
+    test_metric = 'add'
     # model
     load_path = None
 
