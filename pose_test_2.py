@@ -28,7 +28,7 @@ matplotlib.use('agg')
 def eval(dataloader, faster_rcnn, pose_mean, pose_stddev, test_num=10000, test_metric='add'):
     pred_bboxes, pred_poses, pred_labels, pred_scores = list(), list(), list(), list()
     gt_bboxes, gt_poses, gt_labels, gt_difficults = list(), list(), list(), list()
-    for ii, (imgs, sizes, gt_bboxes_, gt_poses_, gt_labels_, gt_difficults_) in tqdm(enumerate(dataloader)):
+    for ii, (rgb_imgs, depth_imgs, sizes, gt_bboxes_, gt_poses_, gt_labels_, gt_difficults_) in tqdm(enumerate(dataloader)):
         sizes = [sizes[0][0], sizes[1][0]]
         pred_bboxes_, pred_poses_, pred_labels_, pred_scores_ = faster_rcnn.predict(rgb_imgs, depth_imgs, [sizes])
         gt_bboxes += list(gt_bboxes_.numpy())
