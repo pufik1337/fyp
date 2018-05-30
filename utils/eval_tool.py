@@ -13,7 +13,7 @@ from model.utils.bbox_tools import bbox_iou
 def eval_network_tejani(
         pred_bboxes, pred_poses, pred_labels, pred_scores, gt_bboxes, gt_poses, gt_labels, model_path, pose_mean, pose_std, n_fg_class=6,
         gt_difficults=None,
-        iou_thresh=0.5, use_07_metric=False):
+        iou_thresh=0.5, use_07_metric=False, test_metric='add'):
     """Calculate average precisions based on evaluation code of PASCAL VOC.
 
     This function evaluates predicted bounding boxes obtained from a dataset
@@ -79,7 +79,8 @@ def eval_network_tejani(
 
     ap = calc_detection_voc_ap(prec, rec, use_07_metric=use_07_metric)
 
-    pose_add = calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, gt_bboxes, model_path, n_fg_class, pose_mean, pose_std, iou_thresh)
+    pose_add = calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, gt_bboxes, model_path, 
+    n_fg_class, pose_mean, pose_std, iou_thresh, metric=test_metric)
 
     return {'ap': ap, 'map': np.nanmean(ap), 'pose_add': pose_add, 'mean_pose_add': np.nanmean(pose_add)}
 
@@ -307,7 +308,7 @@ def calc_detection_voc_ap(prec, rec, use_07_metric=False):
 
     return ap
 
-def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, gt_bboxes, model_path, n_fg_class, pose_mean, pose_std, iou_thresh):
+def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, gt_bboxes, model_path, n_fg_class, pose_mean, pose_std, iou_thresh, metric='add'):
     pred_poses = iter(pred_poses)
     gt_poses = iter(gt_poses)
     pred_labels = iter(pred_labels)
@@ -356,11 +357,20 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
                 pred_bbox_item = pred_bbox[pred_idx]
 
                 pred_r, pred_t = pt.recover_6d_pose(pred_pose_item, pred_bbox_item, pose_mean, pose_std)
-                gt_r, gt_t = gt_pose_item[0:3, :], gt_pose_item[3, :]
-                #print("pred_label_item, gt_label_item: ", pred_label_item, gt_label_item)
+                gt_r, gt_t = np.asarray(gt_pose_item[0:3, :]), np.asarray(gt_pose_item[3, :])
+                pred_r, pred_t = np.asarray(pred_r), np.asarray(pred_t)
+                print("pred_t, gt_t: ", pred_t, gt_t)
                 if pred_label_item == gt_label_item:
                     counts[gt_label_item] += 1.0
-                    error = pose_error.add_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item + 1], diameters[gt_label_item + 1])
+                    if metric == 'add':
+                        error = pose_error.add_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item + 1], diameters[gt_label_item + 1])
+                    elif metric == '5cm5deg':
+                        error = pose_error.five_by_five_metric(pred_r, pred_t, gt_r, gt_t)
+                    elif metric == '2d_pose':
+                        error = 1.0
+                        #error = pose_error.2d_metric
+                    else:
+                        raise ValueError('Unknown pose error metric: ', metric)
                     ap[gt_label_item] += error
 
             pred_idx += 1

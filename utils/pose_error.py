@@ -40,3 +40,43 @@ def add_metric(R_est, t_est, R_gt, t_gt, model, diameter):
     else:
         return 0.0
 
+def re(R_est, R_gt):
+    """
+    Rotational Error.
+
+    :param R_est: Rotational element of the estimated pose (3x1 vector).
+    :param R_gt: Rotational element of the ground truth pose (3x1 vector).
+    :return: Error of t_est w.r.t. t_gt.
+    """
+    assert(R_est.shape == R_gt.shape == (3, 3))
+    error_cos = 0.5 * (np.trace(R_est.dot(np.linalg.inv(R_gt))) - 1.0)
+    error_cos = min(1.0, max(-1.0, error_cos)) # Avoid invalid values due to numerical errors
+    error = math.acos(error_cos)
+    error = 180.0 * error / np.pi # [rad] -> [deg]
+    return error
+
+def te(t_est, t_gt):
+    """
+    Translational Error.
+
+    :param t_est: Translation element of the estimated pose (3x1 vector).
+    :param t_gt: Translation element of the ground truth pose (3x1 vector).
+    :return: Error of t_est w.r.t. t_gt.
+    """
+    assert(t_est.size == t_gt.size == 3)
+    error = np.linalg.norm(t_gt - t_est)
+    return error
+
+def five_by_five_metric(R_est, t_est, R_gt, t_gt):
+    rot_error = re(R_est, R_gt)
+    trans_error = te(t_est, t_gt)
+
+    print("rotation error:", rot_error)
+    print("translation error:", trans_error)
+
+    if rot_error <= 5.0 and trans_error <=  50.0:
+        return 1.0
+    else:
+        return 0.0
+
+
