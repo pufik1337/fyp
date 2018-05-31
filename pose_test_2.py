@@ -26,6 +26,9 @@ matplotlib.use('agg')
 
 
 def eval(dataloader, faster_rcnn, pose_mean, pose_stddev, test_num=10000, test_metric='add'):
+    path = '/home/ubuntu/poses.txt'
+    days_file = open(path,'w')
+
     pred_bboxes, pred_poses, pred_labels, pred_scores = list(), list(), list(), list()
     gt_bboxes, gt_poses, gt_labels, gt_difficults = list(), list(), list(), list()
     for ii, (imgs, sizes, gt_bboxes_, gt_poses_, gt_labels_, gt_difficults_) in tqdm(enumerate(dataloader)):
@@ -39,8 +42,10 @@ def eval(dataloader, faster_rcnn, pose_mean, pose_stddev, test_num=10000, test_m
         pred_poses += pred_poses_
         pred_labels += pred_labels_
         pred_scores += pred_scores_
+        days_file.write(gt_poses, pred_poses)
         if ii == test_num: break
 
+    days_file.close()
     result = eval_network_tejani(
         pred_bboxes, pred_poses, pred_labels, pred_scores,
         gt_bboxes, gt_poses, gt_labels,"/home/ubuntu/fyp/models", pose_mean, pose_stddev, 6, gt_difficults,
