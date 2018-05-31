@@ -44,7 +44,7 @@ def eval(dataloader, faster_rcnn, pose_mean, pose_stddev, test_num=10000, test_m
     result = eval_network_tejani(
         pred_bboxes, pred_poses, pred_labels, pred_scores,
         gt_bboxes, gt_poses, gt_labels,"/home/ubuntu/fyp/models", pose_mean, pose_stddev, 6, gt_difficults,
-        use_07_metric=True)
+        use_07_metric=True, test_metric=test_metric)
     return result
 
 

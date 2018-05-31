@@ -80,7 +80,7 @@ def eval_network_tejani(
     ap = calc_detection_voc_ap(prec, rec, use_07_metric=use_07_metric)
 
     pose_add = calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, gt_bboxes, model_path, 
-    n_fg_class, pose_mean, pose_std, iou_thresh, test_metric=test_metric)
+    n_fg_class, pose_mean, pose_std, iou_thresh, metric=test_metric)
 
     return {'ap': ap, 'map': np.nanmean(ap), 'pose_add': pose_add, 'mean_pose_add': np.nanmean(pose_add)}
 
@@ -357,8 +357,9 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
                 pred_bbox_item = pred_bbox[pred_idx]
 
                 pred_r, pred_t = pt.recover_6d_pose(pred_pose_item, pred_bbox_item, pose_mean, pose_std)
-                gt_r, gt_t = gt_pose_item[0:3, :], gt_pose_item[3, :]
-                #print("pred_label_item, gt_label_item: ", pred_label_item, gt_label_item)
+                gt_r, gt_t = np.asarray(gt_pose_item[0:3, :]), np.asarray(gt_pose_item[3, :])
+                pred_r, pred_t = np.asarray(pred_r), np.asarray(pred_t)
+                print("pred_t, gt_t: ", pred_t, gt_t)
                 if pred_label_item == gt_label_item:
                     counts[gt_label_item] += 1.0
                     if metric == 'add':
