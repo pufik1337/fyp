@@ -44,6 +44,8 @@ def eval(test_metric='add'):
     [pred_bboxes, pred_poses, pred_labels, pred_scores,
         gt_bboxes, gt_poses, gt_labels, _, pose_mean, pose_stddev, _, gt_difficults] = pickle.load(f)
     f.close
+    #print("pred_poses: ", pred_poses)
+    print("gt poses: ", gt_poses)
     print("file closed")
     result = eval_network_tejani(
         pred_bboxes, pred_poses, pred_labels, pred_scores,
