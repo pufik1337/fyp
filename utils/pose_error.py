@@ -9,7 +9,20 @@ import numpy as np
 from scipy import spatial
 from . import misc
 from glumpy import app, gloo, gl
+#import os
+from glumpy.log import log
+import logging
+log.setLevel(logging.WARNING) # ERROR, WARNING, DEBUG, INFO
+print("importing glfw")
+#from OpenGL.GL import *
+#os.environ['SDL_VIDEODRIVER'] = 'x11'
+#app.use('sdl')
+import pygame
+pygame.init()
+#window = app.Window(visible=False)
+#pygame.display.set_mode((800,600))
 
+print("imported glfw")
 def add(R_est, t_est, R_gt, t_gt, model):
     """
     Average Distance of Model Points for objects with no indistinguishable views
@@ -114,9 +127,9 @@ def iou(R_est, t_est, R_gt, t_gt, model, im_size, K):
     return e
 
 def iou_metric(R_est, t_est, R_gt, t_gt, model, im_size, iou_thresh):
-    K = np.asarray([571.9737, 0.0, 319.5, 0.0, 571.0073, 239.5, 0.0, 0.0, 1.0])
+    K = np.asarray([571.9737, 0.0, 319.5, 0.0, 571.0073, 239.5, 0.0, 0.0, 1.0]).reshape(3, 3)
     inter_over_union = iou(R_est, t_est, R_gt, t_gt, model, im_size, K)
-
+    print("IOU : ", inter_over_union)
     if inter_over_union >= iou_thresh:
         return 1.0
     else:
@@ -438,7 +451,7 @@ def render(model, im_size, K, R, t, clip_near=100, clip_far=2000,
     if mode == 'depth':
         vertices_type = [('a_position', np.float32, 3),
                          ('a_color', np.float32, colors.shape[1])]
-        vertices = np.array(zip(model['pts'], colors), vertices_type)
+        vertices = np.array(list(zip(model['pts'], colors)), vertices_type)
     else:
         if shading == 'flat':
             vertices_type = [('a_position', np.float32, 3),
@@ -451,8 +464,8 @@ def render(model, im_size, K, R, t, clip_near=100, clip_far=2000,
                              ('a_normal', np.float32, 3),
                              ('a_color', np.float32, colors.shape[1]),
                              ('a_texcoord', np.float32, 2)]
-            vertices = np.array(zip(model['pts'], model['normals'],
-                                    colors, texture_uv), vertices_type)
+            vertices = np.array(list(zip(model['pts'], model['normals'],
+                                    colors, texture_uv)), vertices_type)
 
     # Rendering
     #---------------------------------------------------------------------------
@@ -479,11 +492,11 @@ def render(model, im_size, K, R, t, clip_near=100, clip_far=2000,
     index_buffer = model['faces'].flatten().astype(np.uint32).view(gloo.IndexBuffer)
 
     # Create window
-    # config = app.configuration.Configuration()
+    config = app.configuration.Configuration()
     # Number of samples used around the current pixel for multisample
     # anti-aliasing (max is 8)
-    # config.samples = 8
-    # config.profile = "core"
+    config.samples = 8
+    config.profile = "core"
     # window = app.Window(config=config, visible=False)
     window = app.Window(visible=False)
 
