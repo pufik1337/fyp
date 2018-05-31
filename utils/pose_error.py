@@ -79,6 +79,49 @@ def five_by_five_metric(R_est, t_est, R_gt, t_gt):
     else:
         return 0.0
 
+def iou(R_est, t_est, R_gt, t_gt, model, im_size, K):
+    """
+    Intersection over Union used
+    in the PASCAL VOC challenge - by Everingham et al. (IJCV 2010).
+
+    :param R_est, t_est: Estimated pose (3x3 rot. matrix and 3x1 trans. vector).
+    :param R_gt, t_gt: GT pose (3x3 rot. matrix and 3x1 trans. vector).
+    :param model: Object model given by a dictionary where item 'pts'
+    is nx3 ndarray with 3D model points.
+    :param im_size: Test image size.
+    :param K: Camera matrix.
+    :return: Error of pose_est w.r.t. pose_gt.
+    """
+
+    # Render depth images of the model in the estimated and the ground truth pose
+    d_est = render(model, im_size, K, R_est, t_est, clip_near=100,
+                            clip_far=10000, mode='depth')
+
+    d_gt = render(model, im_size, K, R_gt, t_gt, clip_near=100,
+                           clip_far=10000, mode='depth')
+
+    # Masks of the rendered model and their intersection and union
+    mask_est = d_est > 0
+    mask_gt = d_gt > 0
+    inter = np.logical_and(mask_gt, mask_est)
+    union = np.logical_or(mask_gt, mask_est)
+
+    union_count = float(union.sum())
+    if union_count > 0:
+        e = inter.sum() / union_count
+    else:
+        e = 0.0
+    return e
+
+def iou_metric(R_est, t_est, R_gt, t_gt, model, im_size, iou_thresh):
+    K = np.asarray([571.9737, 0.0, 319.5, 0.0, 571.0073, 239.5, 0.0, 0.0, 1.0])
+    inter_over_union = iou(R_est, t_est, R_gt, t_gt, model, im_size, K)
+
+    if inter_over_union >= iou_thresh:
+        return 1.0
+    else:
+        return 0.0
+
 _color_vertex_code = """
 uniform mat4 u_mv;
 uniform mat4 u_nm;

@@ -367,7 +367,7 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
                     elif metric == '5cm5deg':
                         error = pose_error.five_by_five_metric(pred_r, pred_t, gt_r, gt_t)
                     elif metric == '2d_pose':
-                        error = 1.0
+                        error = pose_error.iou_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item + 1], (800, 600), 0.5)
                         #error = pose_error.2d_metric
                     else:
                         raise ValueError('Unknown pose error metric: ', metric)
