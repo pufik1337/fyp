@@ -10,7 +10,6 @@ from glumpy import app, gloo, gl
 app.use('glfw')
 # app.use('qt5')
 # app.use('pyside')
-
 # Set logging level
 from glumpy.log import log
 import logging
