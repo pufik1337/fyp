@@ -17,8 +17,8 @@ print("importing glfw")
 #from OpenGL.GL import *
 #os.environ['SDL_VIDEODRIVER'] = 'x11'
 #app.use('sdl')
-import pygame
-pygame.init()
+#import pygame
+#pygame.init()
 #window = app.Window(visible=False)
 #pygame.display.set_mode((800,600))
 
