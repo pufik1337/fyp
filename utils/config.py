@@ -10,8 +10,6 @@ class Config:
     voc_data_dir = '/home/ubuntu/fyp/VOCdevkit/VOC2007'
     tejani_data_dir = '/home/ubuntu/fyp/test'
     tejani_test_dir = '/home/ubuntu/fyp/test'
-    tejani_data_mode = 'rgbd'
-
     min_size = 600  # image resize
     max_size = 1000 # image resize
     num_workers = 8
@@ -23,14 +21,13 @@ class Config:
 
     loc_alpha = 1.0
     pose_alpha = 2.0
-
     pose_beta = 1.5
 
     # param for optimizer
     # 0.0005 in origin paper but 0.0001 in tf-faster-rcnn
     weight_decay = 0.0005
-    lr_decay = 0.9  # 1e-3 -> 1e-4
-    lr = 0.25e-4
+    lr_decay = 0.1  # 1e-3 -> 1e-4
+    lr = 1e-3
 
 
     # visualization
@@ -43,7 +40,7 @@ class Config:
     pretrained_model = 'vgg16'
 
     # training
-    epoch = 20
+    epoch = 15
 
     use_adam = False # Use Adam optimizer
     use_chainer = False # try match everything as chainer
@@ -52,6 +49,7 @@ class Config:
     debug_file = '/tmp/debugf'
 
     test_num = 10000
+    test_metric = 'add'
     # model
     load_path = None
 

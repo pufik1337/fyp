@@ -2,11 +2,12 @@ import os
 
 import ipdb
 import matplotlib
+import pickle
 from tqdm import tqdm
 
 from utils.config import opt
 from data.dataset import Dataset, TestDataset, inverse_normalize
-from model import Deep6DRCNNVGG16_RGBD
+from model import Deep6DRCNNVGG16
 from torch.autograd import Variable
 from torch.utils import data as data_
 from pose_trainer import FasterRCNNPoseTrainer
@@ -26,11 +27,13 @@ matplotlib.use('agg')
 
 
 def eval(dataloader, faster_rcnn, pose_mean, pose_stddev, test_num=10000, test_metric='add'):
+    f = open('/home/ubuntu/store_inference.pckl', 'wb')
+
     pred_bboxes, pred_poses, pred_labels, pred_scores = list(), list(), list(), list()
     gt_bboxes, gt_poses, gt_labels, gt_difficults = list(), list(), list(), list()
-    for ii, (rgb_imgs, depth_imgs, sizes, gt_bboxes_, gt_poses_, gt_labels_, gt_difficults_) in tqdm(enumerate(dataloader)):
+    for ii, (imgs, sizes, gt_bboxes_, gt_poses_, gt_labels_, gt_difficults_) in tqdm(enumerate(dataloader)):
         sizes = [sizes[0][0], sizes[1][0]]
-        pred_bboxes_, pred_poses_, pred_labels_, pred_scores_ = faster_rcnn.predict(rgb_imgs, depth_imgs, [sizes])
+        pred_bboxes_, pred_poses_, pred_labels_, pred_scores_ = faster_rcnn.predict(imgs, [sizes])
         gt_bboxes += list(gt_bboxes_.numpy())
         gt_poses += list(gt_poses_.numpy())
         gt_labels += list(gt_labels_.numpy())
@@ -40,7 +43,10 @@ def eval(dataloader, faster_rcnn, pose_mean, pose_stddev, test_num=10000, test_m
         pred_labels += pred_labels_
         pred_scores += pred_scores_
         if ii == test_num: break
-
+    pickle.dump([pred_bboxes, pred_poses, pred_labels, pred_scores,
+        gt_bboxes, gt_poses, gt_labels, "/home/ubuntu/fyp/models", pose_mean, pose_stddev, 6, gt_difficults], f)
+    f.close
+    print("file closed")
     result = eval_network_tejani(
         pred_bboxes, pred_poses, pred_labels, pred_scores,
         gt_bboxes, gt_poses, gt_labels,"/home/ubuntu/fyp/models", pose_mean, pose_stddev, 6, gt_difficults,
@@ -68,7 +74,7 @@ def test(**kwargs):
                                        shuffle=False, \
                                        pin_memory=True
                                        )
-    faster_rcnn = Deep6DRCNNVGG16_RGBD(n_fg_class=6)
+    faster_rcnn = Deep6DRCNNVGG16(n_fg_class=6)
     print('model construct completed')
     trainer = FasterRCNNPoseTrainer(faster_rcnn).cuda()
     if opt.load_path:
