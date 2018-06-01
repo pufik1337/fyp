@@ -25,7 +25,7 @@ matplotlib.use('agg')
 
 
 def eval(test_metric='add'):
-    f = open('store_inference.pckl', 'rb')
+    f = open('store_inference_rgbd.pckl', 'rb')
 
     # pred_bboxes, pred_poses, pred_labels, pred_scores = list(), list(), list(), list()
     # gt_bboxes, gt_poses, gt_labels, gt_difficults = list(), list(), list(), list()
