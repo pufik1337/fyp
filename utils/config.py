@@ -48,6 +48,7 @@ class Config:
     # debug
     debug_file = '/tmp/debugf'
 
+    test_metric = '5cm5deg'
     test_num = 10000
     test_metric = 'add'
     # model
