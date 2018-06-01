@@ -512,12 +512,12 @@ def render(model, im_size, K, R, t, clip_near=100, clip_far=2000,
             # Render color image
             global rgb
             rgb = draw_color(shape, vertex_buffer, index_buffer, texture, mat_model,
-                                mat_view, mat_proj, ambient_weight, bg_color, shading)
+                             mat_view, mat_proj, ambient_weight, bg_color, shading)
         if render_depth:
             # Render depth image
             global depth
             depth = draw_depth(shape, vertex_buffer, index_buffer, mat_model,
-                                mat_view, mat_proj)
+                               mat_view, mat_proj)
 
     app.run(framecount=0) # The on_draw function is called framecount+1 times
     window.close()
