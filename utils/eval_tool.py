@@ -6,6 +6,7 @@ import numpy as np
 from . import pose_tool as pt
 from . import pose_error
 import six
+import gc
 
 from model.utils.bbox_tools import bbox_iou
 
@@ -368,7 +369,8 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
                     elif metric == '5cm5deg':
                         error = pose_error.five_by_five_metric(pred_r, pred_t, gt_r, gt_t)
                     elif metric == '2d_pose':
-                        error = pose_error.iou_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item + 1], (400, 300), 0.5)
+                        error = pose_error.iou_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item + 1], (640, 480), 0.5)
+                        gc.collect()
                         if error == -1.0:
                             counts[gt_label_item] -= 1.0
                             ap[gt_label_item] += 1.0

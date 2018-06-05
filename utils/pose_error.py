@@ -3,7 +3,6 @@
 
 # Implementation of the pose error functions described in:
 # Hodan et al., "On Evaluation of 6D Object Pose Estimation", ECCVW 2016
-
 import math
 import numpy as np
 from scipy import spatial
@@ -459,7 +458,7 @@ def render(model, im_size, K, R, t, clip_near=100, clip_far=2000,
             vertices_type = [('a_position', np.float32, 3),
                              ('a_color', np.float32, colors.shape[1]),
                              ('a_texcoord', np.float32, 2)]
-            vertices = np.array(zip(model['pts'], colors, texture_uv),
+            vertices = np.array(list(zip(model['pts'], colors, texture_uv)),
                                 vertices_type)
         else: # shading == 'phong'
             vertices_type = [('a_position', np.float32, 3),
@@ -514,12 +513,12 @@ def render(model, im_size, K, R, t, clip_near=100, clip_far=2000,
             # Render color image
             global rgb
             rgb = draw_color(shape, vertex_buffer, index_buffer, texture, mat_model,
-                             mat_view, mat_proj, ambient_weight, bg_color, shading)
+                            mat_view, mat_proj, ambient_weight, bg_color, shading)
         if render_depth:
             # Render depth image
             global depth
             depth = draw_depth(shape, vertex_buffer, index_buffer, mat_model,
-                               mat_view, mat_proj)
+                            mat_view, mat_proj)
 
     app.run(framecount=0) # The on_draw function is called framecount+1 times
     window.close()
