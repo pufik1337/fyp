@@ -371,11 +371,6 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
                     elif metric == '2d_pose':
                         error = pose_error.iou_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item + 1], (640, 480), 0.5)
                         gc.collect()
-                        if error == -1.0:
-                            counts[gt_label_item] -= 1.0
-                            ap[gt_label_item] += 1.0
-                            print("bug :(")
-                        #error = pose_error.2d_metric
                     else:
                         raise ValueError('Unknown pose error metric: ', metric)
                     ap[gt_label_item] += error

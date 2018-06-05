@@ -129,9 +129,7 @@ def iou_metric(R_est, t_est, R_gt, t_gt, model, im_size, iou_thresh):
     K = np.asarray([571.9737, 0.0, 319.5, 0.0, 571.0073, 239.5, 0.0, 0.0, 1.0]).reshape(3, 3)
     inter_over_union = iou(R_est, t_est, R_gt, t_gt, model, im_size, K)
     print("IOU : ", inter_over_union)
-    if inter_over_union == 0.0:
-        return -1.0
-    elif inter_over_union >= iou_thresh:
+    if inter_over_union >= iou_thresh:
         return 1.0
     else:
         return 0.0

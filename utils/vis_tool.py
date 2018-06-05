@@ -112,6 +112,7 @@ def vis_bbox(img, bbox, label=None, score=None, ax=None):
         return ax
 
     for i, bb in enumerate(bbox):
+        bb = 5*bb/4
         xy = (bb[1], bb[0])
         height = bb[2] - bb[0]
         width = bb[3] - bb[1]
