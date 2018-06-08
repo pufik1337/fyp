@@ -6,6 +6,7 @@ import numpy as np
 from . import pose_tool as pt
 from . import pose_error
 import six
+import gc
 
 from model.utils.bbox_tools import bbox_iou
 
@@ -321,10 +322,11 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
 
     ap = np.zeros(n_fg_class)
     counts = np.zeros(n_fg_class)
-
+    i = 0
     for pred_pose, gt_pose, pred_label, gt_label, pred_bbox, gt_bbox in zip(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, gt_bboxes):
         # this is hacky, allows one gt_bbox to correspond to multiple predicted bboxes - does not really matter due to high detection accuracy, but ideally fix later
-
+        print ("ii :", i)
+        i += 1
         pred_bbox = pred_bbox.copy()
         pred_bbox[:, 2:] += 1
         gt_bbox = gt_bbox.copy()
@@ -367,8 +369,8 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
                     elif metric == '5cm5deg':
                         error = pose_error.five_by_five_metric(pred_r, pred_t, gt_r, gt_t)
                     elif metric == '2d_pose':
-                        error = pose_error.iou_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item + 1], (400, 300), 0.5)
-                        #error = pose_error.2d_metric
+                        error = pose_error.iou_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item + 1], (640, 480), 0.5)
+                        gc.collect()              
                     else:
                         raise ValueError('Unknown pose error metric: ', metric)
                     ap[gt_label_item] += error

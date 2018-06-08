@@ -6,11 +6,11 @@ import pickle
 from tqdm import tqdm
 
 from utils.config import opt
-from data.dataset import Dataset, TestDataset, inverse_normalize
+#from data.dataset import Dataset, TestDataset, inverse_normalize
 from torch.autograd import Variable
 from torch.utils import data as data_
 from utils import array_tool as at
-from utils import pose_tool as pt
+#from utils import pose_tool as pt
 from utils.vis_tool import visdom_bbox
 from utils.eval_tool import eval_network_tejani
 
@@ -25,7 +25,7 @@ matplotlib.use('agg')
 
 
 def eval(test_metric='add'):
-    f = open('/home/ubuntu/store_inference.pckl', 'rb')
+    f = open('store_inference.pckl', 'rb')
 
     # pred_bboxes, pred_poses, pred_labels, pred_scores = list(), list(), list(), list()
     # gt_bboxes, gt_poses, gt_labels, gt_difficults = list(), list(), list(), list()
@@ -45,11 +45,11 @@ def eval(test_metric='add'):
         gt_bboxes, gt_poses, gt_labels, _, pose_mean, pose_stddev, _, gt_difficults] = pickle.load(f)
     f.close
     #print("pred_poses: ", pred_poses)
-    print("gt poses: ", gt_poses)
+    #print("gt poses: ", gt_poses)
     print("file closed")
     result = eval_network_tejani(
         pred_bboxes, pred_poses, pred_labels, pred_scores,
-        gt_bboxes, gt_poses, gt_labels,"/home/ubuntu/fyp/models", pose_mean, pose_stddev, 6, gt_difficults,
+        gt_bboxes, gt_poses, gt_labels,"/home/pufik/fyp/tejani/models", pose_mean, pose_stddev, 6, gt_difficults,
         use_07_metric=True, test_metric=test_metric)
     return result
 
