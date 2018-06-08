@@ -58,7 +58,7 @@ def recover_6d_pose(pose_vec, bbox, pose_mean, pose_stddev):
 
     t_vec = [tx, ty, tz]
 
-    return rot_mat, t_vec
+    return np.asarray(rot_mat), np.asarray(t_vec)
 
 def load_models(model_path, n_fg_class):
     models = {}

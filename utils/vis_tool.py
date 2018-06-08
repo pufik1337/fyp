@@ -69,7 +69,7 @@ def vis_image(img, ax=None):
     return ax
 
 
-def vis_bbox(img, bbox, label=None, score=None, ax=None):
+def vis_bbox(img, bbox, label=None, score=None, ax=None, angle_error=None, pose_accepted=None, iou=None):
     """Visualize bounding boxes inside image.
 
     Args:
@@ -116,9 +116,11 @@ def vis_bbox(img, bbox, label=None, score=None, ax=None):
         xy = (bb[1], bb[0])
         height = bb[2] - bb[0]
         width = bb[3] - bb[1]
-        ax.add_patch(plot.Rectangle(
-            xy, width, height, fill=False, edgecolor='red', linewidth=2))
 
+        #i0f error is None:
+            #ax.add_patch(plot.Rectangle(
+                #xy, width, height, fill=False, edgecolor='red', linewidth=2))
+        
         caption = list()
 
         if label is not None and label_names is not None:
@@ -130,11 +132,29 @@ def vis_bbox(img, bbox, label=None, score=None, ax=None):
             sc = score[i]
             caption.append('{:.2f}'.format(sc))
 
+        if angle_error is not None:
+            err = angle_error[i]
+            caption = list()
+            caption.append('Angle error {:.2f}'.format(err))
+
+        if iou is not None:
+            inter_over_union = iou[i]
+            caption = list()
+            caption.append('IoU {:.2f}'.format(inter_over_union))
+
+        if pose_accepted is not None:
+            acc = pose_accepted[i]
+            caption = list()
+            if acc:
+                caption.append('Pose accepted')
+            else:
+                caption.append('Pose rejected')
+
         if len(caption) > 0:
             ax.text(bb[1], bb[0],
                     ': '.join(caption),
                     style='italic',
-                    bbox={'facecolor': 'white', 'alpha': 0.5, 'pad': 0})
+                    bbox={'facecolor': 'white', 'alpha': 0.75, 'pad': 1.0})
     return ax
 
 
