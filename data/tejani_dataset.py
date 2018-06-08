@@ -74,6 +74,22 @@ class TejaniBboxDataset:
         #             'for 2012 dataset. For 2007 dataset, you can pick \'test\''
         #             ' in addition to the above mentioned splits.'
         #         )
+
+        self.SEQ_COUNTS = [265, 414, 543, 410, 95, 340]
+        self.TEST_COUNTS = []
+        self.TRAINVAL_COUNTS = []
+        self.TRAINVAL_IDS = {}
+        self.TEST_IDS = {}
+
+        for i in range(len(self.SEQ_COUNTS)):
+            np.random.seed(0)
+            scrambled_ids = np.random.permutation(self.SEQ_COUNTS[i])
+            boundary = round(0.3*self.SEQ_COUNTS[i])
+            self.TRAINVAL_COUNTS += [boundary]
+            self.TEST_COUNTS += [self.SEQ_COUNTS[i] - boundary]
+            self.TRAINVAL_IDS[i] = scrambled_ids[0:boundary]
+            self.TEST_IDS[i] = scrambled_ids[boundary:self.SEQ_COUNTS[i]]
+
         self.split = split
         self.data_dir = data_dir
         self.label_names = TEJANI_BBOX_LABEL_NAMES
@@ -81,12 +97,12 @@ class TejaniBboxDataset:
         self.use_difficult = use_difficult
 
         if split == 'test':
-            self.ids = range(sum(TEST_COUNTS))
+            self.ids = range(sum(self.TEST_COUNTS))
             self.anno = {}
             for i in range(6):
                 self.anno[i] = yaml.load(open(os.path.join(data_dir, '0' + str(i + 1), 'gt.yml')))
         elif split == 'trainval':
-            self.ids = range(sum(TRAINVAL_COUNTS))
+            self.ids = range(sum(self.TRAINVAL_COUNTS))
             self.anno = {}
             for i in range(6):
                 self.anno[i] = yaml.load(open(os.path.join(data_dir, '0' + str(i + 1), 'gt.yml')))
@@ -95,7 +111,7 @@ class TejaniBboxDataset:
                 data_dir, 'train.txt')
 
             #self.ids = [id_.strip() for id_ in open(id_list_file)]
-            self.ids = range(sum(TRAINVAL_COUNTS))
+            self.ids = range(sum(self.TRAINVAL_COUNTS))
 
         pose_sum = np.empty([1, 4])
         for i in range(len(self)):
@@ -124,16 +140,16 @@ class TejaniBboxDataset:
             classId = 0
             while True:
                 if self.split =='test':
-                    if (i < sum(TEST_COUNTS[:classId + 1]) and i >= sum(TEST_COUNTS[:classId])):
-                        id_ = i - sum(TEST_COUNTS[:classId])
-                        id_ = TEST_IDS[classId][id_]
+                    if (i < sum(self.TEST_COUNTS[:classId + 1]) and i >= sum(self.TEST_COUNTS[:classId])):
+                        id_ = i - sum(self.TEST_COUNTS[:classId])
+                        id_ = self.TEST_IDS[classId][id_]
                         #print("Class id: ", classId)
                         break
                     classId += 1
                 else:
-                    if (i < sum(TRAINVAL_COUNTS[:classId + 1]) and i >= sum(TRAINVAL_COUNTS[:classId])):
-                        id_ = i - sum(TRAINVAL_COUNTS[:classId])
-                        id_ = TRAINVAL_IDS[classId][id_]
+                    if (i < sum(self.TRAINVAL_COUNTS[:classId + 1]) and i >= sum(self.TRAINVAL_COUNTS[:classId])):
+                        id_ = i - sum(self.TRAINVAL_COUNTS[:classId])
+                        id_ = self.TRAINVAL_IDS[classId][id_]
                         #print("Class id: ", classId)
                         break
                     classId += 1                    
@@ -199,39 +215,44 @@ class TejaniBboxDataset:
             
                     
         else:
-            id_ = i/5 + 1
-            blendstyle = SYNDATA_BLEND_TYPES[i%5]
-            anno = ET.parse(
-                os.path.join(self.data_dir, 'annotations', str(int(id_)) + '.xml'))
-            bbox = list()
-            label = list()
-            difficult = list()
-            for obj in anno.findall('object'):
-                # when in not using difficult split, and the object is
-                # difficult, skipt it.
-                if not self.use_difficult and int(obj.find('difficult').text) == 1:
-                    continue
+            pass
+            # id_ = i/5 + 1
+            # blendstyle = SYNDATA_BLEND_TYPES[i%5]
+            # anno = ET.parse(
+            #     os.path.join(self.data_dir, 'annotations', str(int(id_)) + '.xml'))
+            # bbox = list()
+            # label = list()
+            # difficult = list()
+            # for obj in anno.findall('object'):
+            #     # when in not using difficult split, and the object is
+            #     # difficult, skipt it.
+            #     if not self.use_difficult and int(obj.find('difficult').text) == 1:
+            #         continue
 
-                difficult.append(int(obj.find('difficult').text))
-                bndbox_anno = obj.find('bndbox')
-                # subtract 1 to make pixel indexes 0-based
-                bbox.append([
-                    int(bndbox_anno.find(tag).text) - 1
-                    for tag in ('ymin', 'xmin', 'ymax', 'xmax')])
-                name = int(obj.find('name').text.lower().strip()) - 1
-                label.append(name)
-            #print (bbox, label)        
-            bbox = np.stack(bbox).astype(np.float32)
-            label = np.stack(label).astype(np.int32)
-            # When `use_difficult==False`, all elements in `difficult` are False.
-            difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
+            #     difficult.append(int(obj.find('difficult').text))
+            #     bndbox_anno = obj.find('bndbox')
+            #     # subtract 1 to make pixel indexes 0-based
+            #     bbox.append([
+            #         int(bndbox_anno.find(tag).text) - 1
+            #         for tag in ('ymin', 'xmin', 'ymax', 'xmax')])
+            #     name = int(obj.find('name').text.lower().strip()) - 1
+            #     label.append(name)
+            # #print (bbox, label)        
+            # bbox = np.stack(bbox).astype(np.float32)
+            # label = np.stack(label).astype(np.int32)
+            # # When `use_difficult==False`, all elements in `difficult` are False.
+            # difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
                     
-            img_file = os.path.join(self.data_dir, 'images', str(int(id_)) + '_' + blendstyle + '.jpg')
-            img = read_image(img_file, color=True)
+            # img_file = os.path.join(self.data_dir, 'images', str(int(id_)) + '_' + blendstyle + '.jpg')
+            # img = read_image(img_file, color=True)
 
-            return img, bbox, label, difficult
+            # return img, bbox, label, difficult
 
     __getitem__ = get_example
+
+    def shuffle(self):
+        for key, value in self.TRAINVAL_IDS.items():
+            self.TRAINVAL_IDS[key] = np.random.permutation(value)
 
 
 TEJANI_BBOX_LABEL_NAMES = (
@@ -242,26 +263,11 @@ TEJANI_BBOX_LABEL_NAMES = (
     'milk',
     'shampoo')
 
-SYNDATA_BLEND_TYPES = ['box', 'gaussian', 'motion', 'none', 'poisson']
-SEQ_COUNTS = [265, 414, 543, 410, 95, 340]
-TEST_COUNTS = []
-TRAINVAL_COUNTS = []
-TRAINVAL_IDS = {}
-TEST_IDS = {}
-
-for i in range(len(SEQ_COUNTS)):
-    np.random.seed(0)
-    scrambled_ids = np.random.permutation(SEQ_COUNTS[i])
-    boundary = round(0.3*SEQ_COUNTS[i])
-    TRAINVAL_COUNTS += [boundary]
-    TEST_COUNTS += [SEQ_COUNTS[i] - boundary]
-    TRAINVAL_IDS[i] = scrambled_ids[0:boundary]
-    TEST_IDS[i] = scrambled_ids[boundary:SEQ_COUNTS[i]]
 
 #print(TEST_IDS[0])
 #print(TRAINVAL_IDS[0])
 
-#dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani_et_al/test/', split='test')
+#dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani/test/', split='test')
 #totalmax = 0.0
 #pose_sum = np.empty([1, 4])
 
@@ -291,3 +297,6 @@ for i in range(len(SEQ_COUNTS)):
 #print("self mean : ", dummyTD.pose_mean)
 #print("self pose_stddev : ", dummyTD.pose_stddev)
 
+#print(dummyTD.TRAINVAL_IDS)
+#dummyTD.shuffle()
+#print(dummyTD.TRAINVAL_IDS)
