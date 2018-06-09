@@ -127,11 +127,11 @@ def train(**kwargs):
         eval_result = eval(test_dataloader, faster_rcnn, pose_mean, pose_stddev, test_num=opt.test_num)
         print("Epoch %d evaluation result : ", epoch)
         print(eval_result)
-        lr_ = lr_ * opt.lr_decay
+        #lr_ = lr_ * opt.lr_decay
         if eval_result['mean_pose_add'] > best_map and eval_result['mean_pose_add'] > 0.01:
             best_map = eval_result['mean_pose_add']
             best_path = trainer.save(best_map=best_map)
-        if epoch == 5:
+        if epoch == 9:
             trainer.load(best_path)
             trainer.faster_rcnn.scale_lr(opt.lr_decay)
             lr_ = lr_ * opt.lr_decay

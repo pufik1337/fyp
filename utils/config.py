@@ -9,7 +9,7 @@ class Config:
     # data
     voc_data_dir = '/home/ubuntu/fyp/VOCdevkit/VOC2007'
     tejani_data_dir = '/home/ubuntu/fyp/test'
-    tejani_test_dir = '/home/pufik/fyp/tejani/test'
+    tejani_test_dir = '/home/ubuntu/fyp/test'
     tejani_data_mode = 'rgbd'
 
     min_size = 600  # image resize
@@ -51,7 +51,7 @@ class Config:
     debug_file = '/tmp/debugf'
 
     test_num = 10000
-    test_metric = '2d_pose'
+    test_metric = 'add'
     # model
     load_path = None
 
