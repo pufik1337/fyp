@@ -129,8 +129,8 @@ def train(**kwargs):
         print("Epoch %d evaluation result : ", epoch)
         print(eval_result)
         #lr_ = lr_ * opt.lr_decay
-        if eval_result['mean_pose_add'] > best_map and eval_result['mean_pose_add'] > 0.01:
-            best_map = eval_result['mean_pose_add']
+        if eval_result['map'] > best_map: #and eval_result['mean_pose_add'] > 0.01:
+            best_map = eval_result['map']
             best_path = trainer.save(best_map=best_map)
         if epoch == 9:
             trainer.load(best_path)

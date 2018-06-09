@@ -268,12 +268,12 @@ class VGG16PoseHead(nn.Module):
  
         #pool = self.roi(x, indices_and_rois) 
         pool_align = self.roi_align(x, rois.contiguous(), roi_indices.contiguous())
-        pool_align = pool.view(pool_align.size(0), -1)
+        pool_align = pool_align.view(pool_align.size(0), -1)
         fc7 = self.classifier(pool_align)
         roi_cls_locs = self.cls_loc(fc7)
         roi_scores = self.score(fc7)
 
-        fc8 = self.pose_classifier(pool)
+        fc8 = self.pose_classifier(pool_align)
         fc9 = self.pose_fc1(fc8)
         fc10 = self.pose_fc2(fc9)
         roi_pose = self.pose_reg(fc10)
