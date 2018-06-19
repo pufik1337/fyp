@@ -13,6 +13,8 @@ from glumpy.log import log
 import logging
 log.setLevel(logging.WARNING) # ERROR, WARNING, DEBUG, INFO
 print("importing glfw")
+
+from data.tejani_dataset import TejaniBboxDataset
 #from OpenGL.GL import *
 #os.environ['SDL_VIDEODRIVER'] = 'x11'
 #app.use('sdl')
@@ -86,7 +88,7 @@ def five_by_five_metric(R_est, t_est, R_gt, t_gt):
     print("rotation error:", rot_error)
     print("translation error:", trans_error)
 
-    if rot_error <= 5.0 and trans_error <=  50.0:
+    if rot_error <= 360.0 and trans_error <=  50.0:
         return 1.0
     else:
         return 0.0
@@ -133,6 +135,118 @@ def iou_metric(R_est, t_est, R_gt, t_gt, model, im_size, iou_thresh):
         return 1.0
     else:
         return 0.0
+
+def vsd(R_est, t_est, R_gt, t_gt, model, depth_test, K, delta, tau,
+        cost_type='step'):
+    """
+    Visible Surface Discrepancy.
+
+    :param R_est, t_est: Estimated pose (3x3 rot. matrix and 3x1 trans. vector).
+    :param R_gt, t_gt: GT pose (3x3 rot. matrix and 3x1 trans. vector).
+    :param model: Object model given by a dictionary where item 'pts'
+    is nx3 ndarray with 3D model points.
+    :param depth_test: Depth image of the test scene.
+    :param K: Camera matrix.
+    :param delta: Tolerance used for estimation of the visibility masks.
+    :param tau: Misalignment tolerance.
+    :param cost_type: Pixel-wise matching cost:
+        'tlinear' - Used in the original definition of VSD in:
+            Hodan et al., On Evaluation of 6D Object Pose Estimation, ECCVW 2016
+        'step' - Used for SIXD Challenge 2017. It is easier to interpret.
+    :return: Error of pose_est w.r.t. pose_gt.
+    """
+
+    im_size = (depth_test.shape[1], depth_test.shape[0])
+
+    # Render depth images of the model in the estimated and the ground truth pose
+    depth_est = render(model, im_size, K, R_est, t_est, clip_near=100,
+                                clip_far=10000, mode='depth')
+
+    depth_gt = render(model, im_size, K, R_gt, t_gt, clip_near=100,
+                               clip_far=10000, mode='depth')
+
+    # Convert depth images to distance images
+    dist_test = misc.depth_im_to_dist_im(depth_test, K)
+    dist_gt = misc.depth_im_to_dist_im(depth_gt, K)
+    dist_est = misc.depth_im_to_dist_im(depth_est, K)
+
+    # Visibility mask of the model in the ground truth pose
+    visib_gt = estimate_visib_mask_gt(dist_test, dist_gt, delta)
+
+    # Visibility mask of the model in the estimated pose
+    visib_est = estimate_visib_mask_est(dist_test, dist_est, visib_gt, delta)
+
+    # Intersection and union of the visibility masks
+    visib_inter = np.logical_and(visib_gt, visib_est)
+    visib_union = np.logical_or(visib_gt, visib_est)
+
+    # Pixel-wise matching cost
+    costs = np.abs(dist_gt[visib_inter] - dist_est[visib_inter])
+    if cost_type == 'step':
+        costs = costs >= tau
+    elif cost_type == 'tlinear': # Truncated linear
+        costs *= (1.0 / tau)
+        costs[costs > 1.0] = 1.0
+    else:
+        print('Error: Unknown pixel matching cost.')
+        exit(-1)
+
+    # costs_vis = np.ones(dist_gt.shape)
+    # costs_vis[visib_inter] = costs
+    # import matplotlib.pyplot as plt
+    # plt.matshow(costs_vis)
+    # plt.colorbar()
+    # plt.show()
+
+    # Visible Surface Discrepancy
+    visib_union_count = visib_union.sum()
+    visib_comp_count = visib_union_count - visib_inter.sum()
+    if visib_union_count > 0:
+        e = (costs.sum() + visib_comp_count) / float(visib_union_count)
+    else:
+        e = 1.0
+    return e
+
+def vsd_metric(R_est, t_est, R_gt, t_gt, model, img_id, delta, tau,
+        cost_type='step'):
+
+    K = np.asarray([571.9737, 0.0, 319.5, 0.0, 571.0073, 239.5, 0.0, 0.0, 1.0]).reshape(3, 3)
+    depth_test = img_loader.get_example(img_id)[0][0, :, :]
+
+    vis_discrepancy = vsd(R_est, t_est, R_gt, t_gt, model, depth_test, K, delta, tau,
+        cost_type=cost_type)
+
+    if vis_discrepancy >= 0.5:
+        return 0.0
+    else:
+        return 1.0
+
+def estimate_visib_mask(d_test, d_model, delta):
+    """
+    Estimation of visibility mask.
+
+    :param d_test: Distance image of the test scene.
+    :param d_model: Rendered distance image of the object model.
+    :param delta: Tolerance used in the visibility test.
+    :return: Visibility mask.
+    """
+    assert(d_test.shape == d_model.shape)
+    mask_valid = np.logical_and(d_test > 0, d_model > 0)
+
+    d_diff = d_model.astype(np.float32) - d_test.astype(np.float32)
+    visib_mask = np.logical_and(d_diff <= delta, mask_valid)
+
+    return visib_mask
+
+def estimate_visib_mask_gt(d_test, d_gt, delta):
+    visib_gt = estimate_visib_mask(d_test, d_gt, delta)
+    return visib_gt
+
+def estimate_visib_mask_est(d_test, d_est, visib_gt, delta):
+    visib_est = estimate_visib_mask(d_test, d_est, delta)
+    visib_est = np.logical_or(visib_est, np.logical_and(visib_gt, d_est > 0))
+    return visib_est
+
 
 _color_vertex_code = """
 uniform mat4 u_mv;
@@ -535,3 +649,4 @@ def render(model, im_size, K, R, t, clip_near=100, clip_far=2000,
         print('Error: Unknown rendering mode.')
         exit(-1)
 
+img_loader = TejaniBboxDataset('/home/pufik/fyp/tejani/test/', split='test')

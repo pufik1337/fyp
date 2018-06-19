@@ -324,9 +324,6 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
     counts = np.zeros(n_fg_class)
     i = 0
     for pred_pose, gt_pose, pred_label, gt_label, pred_bbox, gt_bbox in zip(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, gt_bboxes):
-        # this is hacky, allows one gt_bbox to correspond to multiple predicted bboxes - does not really matter due to high detection accuracy, but ideally fix later
-        print ("ii :", i)
-        i += 1
         pred_bbox = pred_bbox.copy()
         pred_bbox[:, 2:] += 1
         gt_bbox = gt_bbox.copy()
@@ -337,16 +334,6 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
         # set -1 if there is no matching ground truth
         gt_index[iou.max(axis=1) < iou_thresh] = -1
 
-        #print("gt_index: ", gt_index)
-
-        # for pred_bbox_item in pred_bbox:
-        #     best_iou = 0.0
-        #     for gt_bbox_item in gt_bbox:
-        #         iou = bbox_iou(pred_bbox_item, gt_bbox_item)
-        #         if iou > best_iou:
-        #             best_iou = iou
-        #             correspondences[pred_bbox.index(pred_bbox_item)] = gt_bbox.index(gt_bbox_item)
-        
         pred_idx = 0
 
         for pred_idx in range(iou.shape[0]):
@@ -371,14 +358,15 @@ def calc_pose_error(pred_poses, gt_poses, pred_labels, gt_labels, pred_bboxes, g
                     elif metric == '2d_pose':
                         error = pose_error.iou_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item + 1], (640, 480), 0.5)
                         gc.collect()
+                    elif metric == 'vsd':
+                        error = pose_error.vsd_metric(pred_r, pred_t, gt_r, gt_t, models[gt_label_item + 1], i, 15.0, 20.0)
+                        gc.collect()
                     else:
                         raise ValueError('Unknown pose error metric: ', metric)
                     ap[gt_label_item] += error
 
             pred_idx += 1
-
-    print("ap: ", ap)
-    print("counts: ", counts)    
+        i += 1
 
     return np.divide(ap, counts)
 
