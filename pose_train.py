@@ -82,6 +82,7 @@ def train(**kwargs):
     for epoch in range(opt.epoch):
         #print("in epoch")
         trainer.reset_meters()
+        dataset.db.shuffle()
         #print("just before enumerate")
         for ii, (rgb_img, depth_img, bbox_, pose_, label_, scale) in tqdm(enumerate(dataloader)):
             #print("inside enumerate")

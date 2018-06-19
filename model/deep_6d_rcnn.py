@@ -4,6 +4,8 @@ from torchvision.models import vgg16
 from model.region_proposal_network import RegionProposalNetwork
 from model.faster_twin_rcnn import FasterTwinRCNN
 from model.roi_module import RoIPooling2D
+from model.roi_align.roi_align import RoIAlign
+from model.roi_align.roi_align import CropAndResize
 from utils import array_tool as at
 from utils.config import opt
 
@@ -230,6 +232,7 @@ class VGG16PoseHead(nn.Module):
         self.n_class = n_class
         self.roi_size = roi_size
         self.spatial_scale = spatial_scale
+        self.roi_align = RoIAlign(self.roi_size, self.roi_size)
         self.roi = RoIPooling2D(self.roi_size, self.roi_size, self.spatial_scale)
 
     def forward(self, x, rois, roi_indices):
@@ -250,20 +253,27 @@ class VGG16PoseHead(nn.Module):
 
         """
         # in case roi_indices is  ndarray
-        roi_indices = at.totensor(roi_indices).float()
+        roi_indices = at.totensor(roi_indices).int()
         rois = at.totensor(rois).float()
-        indices_and_rois = t.cat([roi_indices[:, None], rois], dim=1)
+        #indices_and_rois = t.cat([roi_indices[:, None], rois], dim=1)
         # NOTE: important: yx->xy
-        xy_indices_and_rois = indices_and_rois[:, [0, 2, 1, 4, 3]]
-        indices_and_rois = t.autograd.Variable(xy_indices_and_rois.contiguous())
-
-        pool = self.roi(x, indices_and_rois)
-        pool = pool.view(pool.size(0), -1)
-        fc7 = self.classifier(pool)
+        #xy_indices_and_rois = indices_and_rois[:, [0, 2, 1, 4, 3]]
+        #print("shape: ", rois.shape)
+        xy_rois = rois[:, [1, 0, 3, 2]]
+        #indices_and_rois = t.autograd.Variable(xy_indices_and_rois.contiguous())
+        rois, roi_indices = t.autograd.Variable(xy_rois), t.autograd.Variable(roi_indices)
+ 
+        #print("rois: ", rois)
+        #print("roi_indices: ", roi_indices.type())
+ 
+        #pool = self.roi(x, indices_and_rois) 
+        pool_align = self.roi_align(x, rois.contiguous(), roi_indices.contiguous())
+        pool_align = pool_align.view(pool_align.size(0), -1)
+        fc7 = self.classifier(pool_align)
         roi_cls_locs = self.cls_loc(fc7)
         roi_scores = self.score(fc7)
 
-        fc8 = self.pose_classifier(pool)
+        fc8 = self.pose_classifier(pool_align)
         fc9 = self.pose_fc1(fc8)
         fc10 = self.pose_fc2(fc9)
         roi_pose = self.pose_reg(fc10)
