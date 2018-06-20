@@ -8,22 +8,11 @@ import numpy as np
 from scipy import spatial
 from . import misc
 from glumpy import app, gloo, gl
-#import os
 from glumpy.log import log
 import logging
 log.setLevel(logging.WARNING) # ERROR, WARNING, DEBUG, INFO
-print("importing glfw")
-
 from data.tejani_dataset import TejaniBboxDataset
-#from OpenGL.GL import *
-#os.environ['SDL_VIDEODRIVER'] = 'x11'
-#app.use('sdl')
-#import pygame
-#pygame.init()
-#window = app.Window(visible=False)
-#pygame.display.set_mode((800,600))
 
-print("imported glfw")
 def add(R_est, t_est, R_gt, t_gt, model):
     """
     Average Distance of Model Points for objects with no indistinguishable views
@@ -85,9 +74,6 @@ def five_by_five_metric(R_est, t_est, R_gt, t_gt):
     rot_error = re(R_est, R_gt)
     trans_error = te(t_est, t_gt)
 
-    print("rotation error:", rot_error)
-    print("translation error:", trans_error)
-
     if rot_error <= 360.0 and trans_error <=  50.0:
         return 1.0
     else:
@@ -130,7 +116,6 @@ def iou(R_est, t_est, R_gt, t_gt, model, im_size, K):
 def iou_metric(R_est, t_est, R_gt, t_gt, model, im_size, iou_thresh):
     K = np.asarray([571.9737, 0.0, 319.5, 0.0, 571.0073, 239.5, 0.0, 0.0, 1.0]).reshape(3, 3)
     inter_over_union = iou(R_est, t_est, R_gt, t_gt, model, im_size, K)
-    print("IOU : ", inter_over_union)
     if inter_over_union >= iou_thresh:
         return 1.0
     else:
@@ -649,4 +634,5 @@ def render(model, im_size, K, R, t, clip_near=100, clip_far=2000,
         print('Error: Unknown rendering mode.')
         exit(-1)
 
+# This must be replaced by the correct path
 img_loader = TejaniBboxDataset('/home/pufik/fyp/tejani/test/', split='test')

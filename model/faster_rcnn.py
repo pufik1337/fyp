@@ -159,9 +159,6 @@ class FasterRCNN(nn.Module):
         score = list()
         pose = list()
         # skip cls_id = 0 because it is the background class
-        #print("Type of pose: ", raw_poses.shape)
-        #print("Type of raw_cls_bbox: ", raw_cls_bbox.shape)
-        #print("Type of raw_prob: ", raw_prob.shape)
         for l in range(1, self.n_class):
             cls_bbox_l = raw_cls_bbox.reshape((-1, self.n_class, 4))[:, l, :]
             prob_l = raw_prob[:, l]
@@ -171,7 +168,6 @@ class FasterRCNN(nn.Module):
             keep = non_maximum_suppression(
                 cp.array(cls_bbox_l), self.nms_thresh, prob_l)
             keep = cp.asnumpy(keep)
-            #print("keep: ", len(keep))
             bbox.append(cls_bbox_l[keep])
             # The labels are in [0, self.n_class - 2].
             label.append((l - 1) * np.ones((len(keep),)))

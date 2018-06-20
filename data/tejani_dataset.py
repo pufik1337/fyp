@@ -67,14 +67,6 @@ class TejaniBboxDataset:
                  use_difficult=False, return_difficult=False,
                  ):
 
-        # if split not in ['train', 'trainval', 'val']:
-        #     if not (split == 'test' and year == '2007'):
-        #         warnings.warn(
-        #             'please pick split from \'train\', \'trainval\', \'val\''
-        #             'for 2012 dataset. For 2007 dataset, you can pick \'test\''
-        #             ' in addition to the above mentioned splits.'
-        #         )
-
         self.SEQ_COUNTS = [265, 414, 543, 410, 95, 340]
         self.TEST_COUNTS = []
         self.TRAINVAL_COUNTS = []
@@ -216,37 +208,6 @@ class TejaniBboxDataset:
                     
         else:
             pass
-            # id_ = i/5 + 1
-            # blendstyle = SYNDATA_BLEND_TYPES[i%5]
-            # anno = ET.parse(
-            #     os.path.join(self.data_dir, 'annotations', str(int(id_)) + '.xml'))
-            # bbox = list()
-            # label = list()
-            # difficult = list()
-            # for obj in anno.findall('object'):
-            #     # when in not using difficult split, and the object is
-            #     # difficult, skipt it.
-            #     if not self.use_difficult and int(obj.find('difficult').text) == 1:
-            #         continue
-
-            #     difficult.append(int(obj.find('difficult').text))
-            #     bndbox_anno = obj.find('bndbox')
-            #     # subtract 1 to make pixel indexes 0-based
-            #     bbox.append([
-            #         int(bndbox_anno.find(tag).text) - 1
-            #         for tag in ('ymin', 'xmin', 'ymax', 'xmax')])
-            #     name = int(obj.find('name').text.lower().strip()) - 1
-            #     label.append(name)
-            # #print (bbox, label)        
-            # bbox = np.stack(bbox).astype(np.float32)
-            # label = np.stack(label).astype(np.int32)
-            # # When `use_difficult==False`, all elements in `difficult` are False.
-            # difficult = np.array(difficult, dtype=np.bool).astype(np.uint8)  # PyTorch don't support np.bool
-                    
-            # img_file = os.path.join(self.data_dir, 'images', str(int(id_)) + '_' + blendstyle + '.jpg')
-            # img = read_image(img_file, color=True)
-
-            # return img, bbox, label, difficult
 
     __getitem__ = get_example
 
@@ -262,41 +223,3 @@ TEJANI_BBOX_LABEL_NAMES = (
     'juice',
     'milk',
     'shampoo')
-
-
-#print(TEST_IDS[0])
-#print(TRAINVAL_IDS[0])
-
-#dummyTD = TejaniBboxDataset('/home/pufik/fyp/tejani/test/', split='test')
-#totalmax = 0.0
-#pose_sum = np.empty([1, 4])
-
-#for i in range(len(dummyTD)):
-    #     for j in range(4):
-    #         if math.isnan(example[j]):
-    #             print("NaN found in example ", i)
- #   thismax = np.max(dummyTD.get_example(i, normalize=True, mode='rgbd')[0][1])
-  #  if thismax > totalmax:
-   #     totalmax = thismax
-    #print("Example  ", i, " :", dummyTD.get_example(i, normalize=True, mode='rgbd')[0][1].shape)
-     #pose_sum = np.vstack((dummyTD.get_example(i)[2], pose_sum))
-     #ex = dummyTD.get_example(i, normalize =True)[2][0]
-     #transformed = recover_6d_pose(ex, dummyTD.get_example(i)[1][0], dummyTD.pose_mean, dummyTD.pose_stddev)
-     #print("transformed : ", transformed)
-#     posevec = transform_pose_mat(ex)
-#     print("posevec: ", posevec)
-#     pose = recover_6d_pose(posevec, dummyTD.get_example(i)[1][0])
-#     print("Recovered pose:  ", i, " : \n", pose)
-#print("totalmax: ", totalmax)
-#print("pose sum: ", pose_sum, pose_sum.shape)
-#pose_mean = np.mean(pose_sum, axis=0)
-#pose_stddev = np.std(pose_sum, axis=0)
-#print("mean : ", pose_mean)
-#print("std dev : ", pose_stddev)
-
-#print("self mean : ", dummyTD.pose_mean)
-#print("self pose_stddev : ", dummyTD.pose_stddev)
-
-#print(dummyTD.TRAINVAL_IDS)
-#dummyTD.shuffle()
-#print(dummyTD.TRAINVAL_IDS)
