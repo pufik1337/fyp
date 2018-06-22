@@ -7,4 +7,16 @@ pprint
 matplotlib
 ipdb
 cython
+numpy
+matplotlib
+scipy
+pypng
+ruamel.yaml
+pillow
+cython
+pyopengl
+glumpy
+opencv-python
 git+https://github.com/pytorch/tnt.git@master
+
+
