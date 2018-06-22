@@ -22,6 +22,7 @@ Visualization and evaluation scripts use code from https://github.com/thodan/six
 1. First, download the checkpoint of the pre-trained VGG16 weights: 
 
     `mkdir checkpoints/`
+    
     `python misc/convert_caffe_pretrain.py`
 
 2. For visualization, start the Visdom server: 
